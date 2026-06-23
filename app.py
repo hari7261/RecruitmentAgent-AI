@@ -1,22 +1,39 @@
+from platform import release
 from typing import Literal, Tuple, Dict, Optional
 import os
+import sys
+
+# Configure standard output and error streams to use UTF-8 to prevent encoding crashes on Windows
+if sys.stdout and sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+if sys.stderr and sys.stderr.encoding != 'utf-8':
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
 import time
 import json
 import requests
+# pyrefly: ignore [missing-import]
 import PyPDF2
 from datetime import datetime, timedelta
 import pytz
+from dotenv import load_dotenv
 
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import streamlit as st
-from agno.agent import Agent
-from agno.models.google import Gemini
-from agno.tools.email import EmailTools
-from agno.utils.log import logger
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("recruitment_system")
 from streamlit_pdf_viewer import pdf_viewer
+import db_helper
 
 
 class CustomZoomTool:
@@ -166,6 +183,80 @@ class CustomZoomTool:
             logger.error(f"Error adding attendee: {e}")
             return False
 
+class OpenRouterMessage:
+    def __init__(self, role: str, content: str):
+        self.role = role
+        self.content = content
+
+
+class OpenRouterResponse:
+    def __init__(self, content: str):
+        self.content = content
+        self.messages = [OpenRouterMessage("assistant", content)]
+
+
+class OpenRouterAgent:
+    def __init__(self, name: str = "OpenRouter Agent", description: str = "", instructions: list = None, show_tool_calls: bool = False, markdown: bool = False):
+        self.name = name
+        self.description = description
+        self.instructions = instructions or []
+        self.show_tool_calls = show_tool_calls
+        self.markdown = markdown
+        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
+
+    def run(self, prompt: str) -> OpenRouterResponse:
+        messages = []
+        
+        system_content = []
+        if self.description:
+            system_content.append(self.description)
+        if self.instructions:
+            system_content.extend(self.instructions)
+            
+        if system_content:
+            messages.append({"role": "system", "content": "\n".join(system_content)})
+            
+        messages.append({"role": "user", "content": prompt})
+        
+        api_key = st.session_state.get("openrouter_api_key", "").strip()
+        if not api_key:
+            api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+            
+        if not api_key:
+            raise ValueError("OpenRouter API Key not found. Please provide it in the sidebar or env file.")
+            
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://localhost:8501",
+            "X-OpenRouter-Title": "AI Recruitment System"
+        }
+        
+        model_name = st.session_state.get("openrouter_model", "openrouter/free")
+        if not model_name:
+            model_name = os.getenv("OPENROUTER_MODEL", "openrouter/free")
+            
+        data = {
+            "model": model_name,
+            "messages": messages
+        }
+        
+        try:
+            response = requests.post(self.api_url, headers=headers, json=data, timeout=60)
+            response.raise_for_status()
+            res_json = response.json()
+            
+            if "choices" in res_json and len(res_json["choices"]) > 0:
+                content = res_json["choices"][0]["message"]["content"]
+                return OpenRouterResponse(content)
+            else:
+                error_msg = f"Unexpected response from OpenRouter: {res_json}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+        except Exception as e:
+            logger.error(f"OpenRouter API error: {e}")
+            raise RuntimeError(f"OpenRouter API failed: {str(e)}")
+
 
 # Role requirements as a constant dictionary
 ROLE_REQUIREMENTS: Dict[str, str] = {
@@ -176,53 +267,32 @@ ROLE_REQUIREMENTS: Dict[str, str] = {
         - Deep Learning and Neural Networks
         - Data preprocessing and analysis
         - MLOps and model deployment
-        - RAG, LLM, Finetuning and Prompt Engineering
     """,
-
     "frontend_engineer": """
         Required Skills:
-        - React/Vue.js/Angular
-        - HTML5, CSS3, JavaScript/TypeScript
-        - Responsive design
-        - State management
-        - Frontend testing
+        - HTML, CSS, JavaScript/TypeScript
+        - React, Vue, or Angular
+        - Responsive design and UI/UX best practices
+        - State management (Redux, Pinia, etc.)
+        - Frontend build tools (Vite, Webpack)
     """,
-
     "backend_engineer": """
         Required Skills:
-        - Python/Java/Node.js
-        - REST APIs
-        - Database design and management
-        - System architecture
-        - Cloud services (AWS/GCP/Azure)
-        - Kubernetes, Docker, CI/CD
+        - Python, Node.js, or Go
+        - Web frameworks (FastAPI, Express, etc.)
+        - Databases (SQL and NoSQL)
+        - API design (REST, GraphQL)
+        - Docker and containerization
     """
 }
 
-
-def init_session_state() -> None:
-    """Initialize only necessary session state variables."""
-    defaults = {
-        'candidate_email': "", 'gemini_api_key': "", 'resume_text': "", 'analysis_complete': False,
-        'is_selected': False, 'zoom_account_id': "", 'zoom_client_id': "", 'zoom_client_secret': "",
-        'email_sender': "", 'email_passkey': "", 'company_name': "", 'current_pdf': None
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-
-def create_resume_analyzer() -> Agent:
-    """Creates and returns a resume analysis agent."""
-    if not st.session_state.gemini_api_key:
-        st.error("Please enter your Gemini API key first.")
+def create_resume_analyzer() -> OpenRouterAgent:
+    if not st.session_state.get("openrouter_api_key"):
+        st.error("Please enter your OpenRouter API key first.")
         return None
 
-    return Agent(
-        model=Gemini(
-            id="gemini-2.0-flash",
-            api_key=st.session_state.gemini_api_key
-        ),
+    return OpenRouterAgent(
+        name="Resume Analyzer",
         description="You are an expert technical recruiter who analyzes resumes.",
         instructions=[
             "Analyze the resume against the provided job requirements",
@@ -234,12 +304,13 @@ def create_resume_analyzer() -> Agent:
         markdown=True
     )
 
-def create_email_agent() -> Agent:
-    return Agent(
-        model=Gemini(
-            id="gemini-1.5-flash",
-            api_key=st.session_state.gemini_api_key
-        ),
+def create_email_agent() -> OpenRouterAgent:
+    if not st.session_state.get("openrouter_api_key"):
+        st.error("Please enter your OpenRouter API key first.")
+        return None
+
+    return OpenRouterAgent(
+        name="Email Coordinator",
         description="You are a professional recruitment coordinator handling email communications.",
         instructions=[
             "Draft professional recruitment emails",
@@ -253,19 +324,13 @@ def create_email_agent() -> Agent:
     )
 
 
-def create_scheduler_agent() -> Agent:
-    zoom_tools = CustomZoomTool(
-        account_id=st.session_state.zoom_account_id,
-        client_id=st.session_state.zoom_client_id,
-        client_secret=st.session_state.zoom_client_secret
-    )
+def create_scheduler_agent() -> OpenRouterAgent:
+    if not st.session_state.get("openrouter_api_key"):
+        st.error("Please enter your OpenRouter API key first.")
+        return None
 
-    return Agent(
+    return OpenRouterAgent(
         name="Interview Scheduler",
-        model=Gemini(
-            id="gemini-1.5-flash",
-            api_key=st.session_state.gemini_api_key
-        ),
         description="You are an interview scheduling coordinator.",
         instructions=[
             "You are an expert at scheduling technical interviews using Zoom.",
@@ -286,6 +351,11 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
         if not st.session_state.email_sender or not st.session_state.email_passkey:
             st.error("Email credentials not configured properly")
             return False
+        # Basic validation: app passwords should be 16 chars with no spaces
+        passkey = st.session_state.email_passkey.replace(" ", "").strip()
+        if len(passkey) < 8:
+            st.error("Email passkey appears invalid. Ensure you set a correct app password.")
+            return False
             
         msg = MIMEMultipart()
         msg['From'] = st.session_state.email_sender
@@ -297,7 +367,7 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
         # Use Gmail SMTP server
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        server.login(st.session_state.email_sender, st.session_state.email_passkey)
+        server.login(st.session_state.email_sender, passkey)
         
         text = msg.as_string()
         server.sendmail(st.session_state.email_sender, to_email, text)
@@ -332,9 +402,12 @@ def extract_text_from_pdf(pdf_file) -> str:
 def analyze_resume(
     resume_text: str,
     role: Literal["ai_ml_engineer", "frontend_engineer", "backend_engineer"],
-    analyzer: Agent
+    analyzer: OpenRouterAgent
 ) -> Tuple[bool, str]:
     try:
+        if analyzer is None:
+            # Model provider not configured or unavailable
+            return False, "Resume analysis unavailable: model provider not configured."
         response = analyzer.run(
             f"""Please analyze this resume against the following requirements and provide your response in valid JSON format:
             Role Requirements:
@@ -399,7 +472,7 @@ def analyze_resume(
         return False, f"Resume analysis failed: {str(e)}"
 
 
-def send_selection_email(email_agent: Agent, to_email: str, role: str) -> None:
+def send_selection_email(email_agent: OpenRouterAgent, to_email: str, role: str) -> None:
     # Generate email content using AI
     response = email_agent.run(
         f"""
@@ -425,12 +498,14 @@ def send_selection_email(email_agent: Agent, to_email: str, role: str) -> None:
         subject=f"congratulations! you've been selected for the {role} position",
         body=email_content
     )
+    if success:
+        db_helper.log_sent_email(to_email, role, f"congratulations! you've been selected for the {role} position", email_content)
     
     if not success:
         st.error("Failed to send selection email")
 
 
-def send_rejection_email(email_agent: Agent, to_email: str, role: str, feedback: str) -> None:
+def send_rejection_email(email_agent: OpenRouterAgent, to_email: str, role: str, feedback: str) -> None:
     """
     Send a rejection email with constructive feedback.
     """
@@ -463,12 +538,14 @@ def send_rejection_email(email_agent: Agent, to_email: str, role: str, feedback:
         subject=f"update on your application for {role} position",
         body=email_content
     )
+    if success:
+        db_helper.log_sent_email(to_email, role, f"update on your application for {role} position", email_content)
     
     if not success:
         st.error("Failed to send rejection email")
 
 
-def schedule_interview(scheduler: Agent, candidate_email: str, email_agent: Agent, role: str) -> None:
+def schedule_interview(scheduler: OpenRouterAgent, candidate_email: str, email_agent: OpenRouterAgent, role: str) -> None:
     """
     Schedule interviews during business hours (9 AM - 5 PM IST).
     """
@@ -498,10 +575,10 @@ def schedule_interview(scheduler: Agent, candidate_email: str, email_agent: Agen
         if "error" in meeting_info:
             st.warning(f"Could not create Zoom meeting automatically: {meeting_info['error']}")
             if "scopes" in meeting_info['error']:
-                st.info("💡 **Fix:** Go to your Zoom app settings and add the required scopes:\n- `meeting:write:meeting`\n- `meeting:write:meeting:admin`\n- `user:read:admin`")
+                st.info("Fix: Go to your Zoom app settings and add the required scopes:\n- `meeting:write:meeting`\n- `meeting:write:meeting:admin`\n- `user:read:admin`")
             # Still send email with manual scheduling note
             meeting_details = f"""
-📅 Interview Details:
+Interview Details:
 - Meeting Title: {role} Technical Interview
 - Date & Time: {interview_time.strftime('%B %d, %Y at %I:%M %p IST')}
 - Duration: 60 minutes
@@ -515,7 +592,7 @@ Time zone: IST (India Standard Time - UTC+5:30)
         else:
             # Zoom meeting created successfully
             meeting_details = f"""
-📅 Interview Details:
+Interview Details:
 - Meeting Title: {meeting_info.get('topic', 'Technical Interview')}
 - Date & Time: {interview_time.strftime('%B %d, %Y at %I:%M %p IST')}
 - Duration: 60 minutes
@@ -527,40 +604,66 @@ Please join the meeting 5 minutes early and be confident!
 Time zone: IST (India Standard Time - UTC+5:30)
 """
 
-        # Generate email content
-        response = email_agent.run(
-            f"""Draft an interview confirmation email with these details:
-            - Role: {role} position
-            - Meeting Details: {meeting_details}
-            
-            Important:
-            - Use all lowercase letters
-            - Clearly specify that the time is in IST (India Standard Time)
-            - Ask the candidate to join 5 minutes early
-            - Ask them to be confident and not nervous and prepare well for the interview
-            - End with exactly: 'best,\nthe ai recruiting team'
-            
-            Return only the email body text, no subject line.
-            """
-        )
-        
-        # Extract email content and send
-        email_content = next((msg.content for msg in response.messages if msg.role == 'assistant'), "")
+        # Update database with meeting details
+        meeting_id = str(meeting_info.get('id', 'N/A')) if "error" not in meeting_info else "N/A"
+        meeting_link = meeting_info.get('join_url', 'N/A') if "error" not in meeting_info else "Manual Link"
+        db_helper.update_candidate_meeting(candidate_email, role, meeting_id, meeting_link, formatted_time)
+
+        # Combine congratulations and interview details in a friendly, lowercase tone
+        role_name = role.replace('_', ' ').title()
+        company = st.session_state.company_name
+        email_content = f"""hi there,
+
+congratulations! you've been selected for the {role_name} position at {company}. we were highly impressed by your skills and profile during the initial review.
+
+we would love to schedule your technical interview. here are the details:
+{meeting_details}
+
+please prepare well, be confident and do not be nervous. join the meeting 5 minutes early.
+
+best,
+the ai recruiting team"""
         
         success = send_email(
             to_email=candidate_email,
-            subject=f"interview details for {role} position",
+            subject=f"update on your application for {role_name} position - congratulations!",
             body=email_content
         )
+        if success:
+            db_helper.log_sent_email(candidate_email, role, f"update on your application for {role_name} position - congratulations!", email_content)
         
         if success:
-            st.success("Interview scheduled successfully! Check your email for details.")
+            st.success("Application processed and interview scheduled successfully! Check your email for details.")
         else:
             st.error("Interview was scheduled but failed to send email notification")
         
     except Exception as e:
         logger.error(f"Error scheduling interview: {str(e)}")
         st.error("Unable to schedule interview. Please try again.")
+
+
+def init_session_state() -> None:
+    load_dotenv()
+    db_helper.init_db()
+    defaults = {
+        "openrouter_api_key": os.getenv("OPENROUTER_API_KEY", ""),
+        "openrouter_model": os.getenv("OPENROUTER_MODEL", "openrouter/free"),
+        "zoom_account_id": os.getenv("ZOOM_ACCOUNT_ID", ""),
+        "zoom_client_id": os.getenv("ZOOM_CLIENT_ID", ""),
+        "zoom_client_secret": os.getenv("ZOOM_CLIENT_SECRET", ""),
+        "email_sender": os.getenv("EMAIL_SENDER", ""),
+        "email_passkey": os.getenv("EMAIL_PASSKEY", ""),
+        "company_name": os.getenv("COMPANY_NAME", "AI Recruiting Team"),
+        "candidate_email": "",
+        "resume_text": "",
+        "analysis_complete": False,
+        "is_selected": False,
+        "current_pdf": None
+    }
+    for key, default_val in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_val
+
 
 
 def main() -> None:
@@ -573,10 +676,10 @@ def main() -> None:
         # Setup Instructions
         with st.expander("📋 Setup Instructions", expanded=False):
             st.markdown("""
-            **🔑 Gemini API Key:**
-            1. Go to [aistudio.google.com](https://aistudio.google.com)
-            2. Sign in with Google account
-            3. Create API key
+            **🔑 OpenRouter API Key:**
+            1. Go to [openrouter.ai](https://openrouter.ai)
+            2. Sign in or create an account
+            3. Generate an API Key under Keys section
             
             **📧 Gmail Setup:**
             1. Enable 2-Factor Authentication on Gmail
@@ -595,10 +698,12 @@ def main() -> None:
             5. Activate the app after adding scopes
             """)
         
-        # Gemini Configuration
-        st.subheader("Gemini Settings")
-        api_key = st.text_input("Gemini API Key", type="password", value=st.session_state.gemini_api_key, help="Get your API key from aistudio.google.com")
-        if api_key: st.session_state.gemini_api_key = api_key
+        # OpenRouter Configuration
+        st.subheader("OpenRouter Settings")
+        api_key = st.text_input("OpenRouter API Key", type="password", value=st.session_state.openrouter_api_key, help="Get your API key from openrouter.ai")
+        if api_key: st.session_state.openrouter_api_key = api_key
+        model_name = st.text_input("OpenRouter Model", value=st.session_state.openrouter_model, help="e.g. openrouter/free or openai/gpt-4o-mini")
+        if model_name: st.session_state.openrouter_model = model_name
 
         st.subheader("Zoom Settings")
         st.info("🔗 **Zoom Setup Required:**\n1. Go to Zoom App Marketplace\n2. Create Server-to-Server OAuth App\n3. Add scopes: `meeting:write:meeting`, `meeting:write:meeting:admin`, `user:read:admin`\n4. Get Account ID, Client ID, Client Secret")
@@ -650,7 +755,7 @@ def main() -> None:
         if email_passkey: st.session_state.email_passkey = email_passkey
         if company_name: st.session_state.company_name = company_name
 
-        required_configs = {'Gemini API Key': st.session_state.gemini_api_key, 'Zoom Account ID': st.session_state.zoom_account_id,
+        required_configs = {'OpenRouter API Key': st.session_state.openrouter_api_key, 'OpenRouter Model': st.session_state.openrouter_model, 'Zoom Account ID': st.session_state.zoom_account_id,
                           'Zoom Client ID': st.session_state.zoom_client_id, 'Zoom Client Secret': st.session_state.zoom_client_secret,
                           'Email Sender': st.session_state.email_sender, 'Email Password': st.session_state.email_passkey,
                           'Company Name': st.session_state.company_name}
@@ -660,167 +765,151 @@ def main() -> None:
         st.warning(f"Please configure the following in the sidebar: {', '.join(missing_configs)}")
         return
 
-    if not st.session_state.gemini_api_key:
-        st.warning("Please enter your Gemini API key in the sidebar to continue.")
+    if not st.session_state.openrouter_api_key:
+        st.warning("Please enter your OpenRouter API key in the sidebar to continue.")
         return
 
-    role = st.selectbox("Select the role you're applying for:", ["ai_ml_engineer", "frontend_engineer", "backend_engineer"])
-    with st.expander("View Required Skills", expanded=True): st.markdown(ROLE_REQUIREMENTS[role])
+    with st.container():
+        role = st.selectbox("Select the role you're applying for:", ["ai_ml_engineer", "frontend_engineer", "backend_engineer"])
+        with st.expander("View Required Skills", expanded=True): st.markdown(ROLE_REQUIREMENTS[role])
 
-    # Add a "New Application" button before the resume upload
-    if st.button("📝 New Application"):
-        # Clear only the application-related states
-        keys_to_clear = ['resume_text', 'analysis_complete', 'is_selected', 'candidate_email', 'current_pdf']
-        for key in keys_to_clear:
-            if key in st.session_state:
-                st.session_state[key] = None if key == 'current_pdf' else ""
-        st.rerun()
+        # Add a "New Application" button before the resume upload
+        if st.button("📝 New Application"):
+            # Clear only the application-related states
+            keys_to_clear = ['resume_text', 'analysis_complete', 'is_selected', 'candidate_email', 'current_pdf', 'application_processed']
+            for key in keys_to_clear:
+                if key in st.session_state:
+                    st.session_state[key] = None if key == 'current_pdf' else ""
+            st.rerun()
 
-    resume_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"], key="resume_uploader")
-    if resume_file is not None and resume_file != st.session_state.get('current_pdf'):
-        st.session_state.current_pdf = resume_file
-        st.session_state.resume_text = ""
-        st.session_state.analysis_complete = False
-        st.session_state.is_selected = False
-        st.rerun()
+        resume_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"], key="resume_uploader")
+        if resume_file is not None and resume_file != st.session_state.get('current_pdf'):
+            st.session_state.current_pdf = resume_file
+            st.session_state.resume_text = ""
+            st.session_state.analysis_complete = False
+            st.session_state.is_selected = False
+            st.session_state.application_processed = False
+            st.rerun()
 
-    if resume_file:
-        st.subheader("Uploaded Resume")
-        col1, col2 = st.columns([4, 1])
-        
-        with col1:
-            import tempfile, os
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-                tmp_file.write(resume_file.read())
-                tmp_file_path = tmp_file.name
-            resume_file.seek(0)
-            try: pdf_viewer(tmp_file_path)
-            finally: os.unlink(tmp_file_path)
-        
-        with col2:
-            st.download_button(label="📥 Download", data=resume_file, file_name=resume_file.name, mime="application/pdf")
-        # Process the resume text
-        if not st.session_state.resume_text:
-            with st.spinner("Processing your resume..."):
-                resume_text = extract_text_from_pdf(resume_file)
-                if resume_text:
-                    st.session_state.resume_text = resume_text
-                    st.success("Resume processed successfully!")
-                else:
-                    st.error("Could not process the PDF. Please try again.")
-
-    # Email input with session state
-    email = st.text_input(
-        "Candidate's email address",
-        value=st.session_state.candidate_email,
-        key="email_input"
-    )
-    st.session_state.candidate_email = email
-
-    # Analysis and next steps
-    if st.session_state.resume_text and email and not st.session_state.analysis_complete:
-        if st.button("Analyze Resume"):
-            with st.spinner("Analyzing your resume..."):
-                resume_analyzer = create_resume_analyzer()
-                email_agent = create_email_agent()  # Create email agent here
-                
-                if resume_analyzer and email_agent:
-                    print("DEBUG: Starting resume analysis")
-                    is_selected, feedback = analyze_resume(
-                        st.session_state.resume_text,
-                        role,
-                        resume_analyzer
-                    )
-                    print(f"DEBUG: Analysis complete - Selected: {is_selected}, Feedback: {feedback}")
-
-                    if is_selected:
-                        st.success("Congratulations! Your skills match our requirements.")
-                        st.session_state.analysis_complete = True
-                        st.session_state.is_selected = True
-                        st.rerun()
+        if resume_file:
+            st.subheader("Uploaded Resume")
+            col1, col2 = st.columns([4, 1])
+            
+            with col1:
+                import tempfile, os
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                    tmp_file.write(resume_file.read())
+                    tmp_file_path = tmp_file.name
+                resume_file.seek(0)
+                try: pdf_viewer(tmp_file_path)
+                finally: os.unlink(tmp_file_path)
+            
+            with col2:
+                st.download_button(label="📥 Download", data=resume_file, file_name=resume_file.name, mime="application/pdf")
+            # Process the resume text
+            if not st.session_state.resume_text:
+                with st.spinner("Processing your resume..."):
+                    resume_text = extract_text_from_pdf(resume_file)
+                    if resume_text:
+                        st.session_state.resume_text = resume_text
+                        st.success("Resume processed successfully!")
                     else:
-                        st.warning("Unfortunately, your skills don't match our requirements.")
-                        st.write(f"Feedback: {feedback}")
-                        
-                        # Send rejection email
-                        with st.spinner("Sending feedback email..."):
-                            try:
-                                send_rejection_email(
-                                    email_agent=email_agent,
-                                    to_email=email,
-                                    role=role,
-                                    feedback=feedback
-                                )
-                                st.info("We've sent you an email with detailed feedback.")
-                            except Exception as e:
-                                logger.error(f"Error sending rejection email: {e}")
-                                st.error("Could not send feedback email. Please try again.")
+                        st.error("Could not process the PDF. Please try again.")
 
-    if st.session_state.get('analysis_complete') and st.session_state.get('is_selected', False):
-        st.success("Congratulations! Your skills match our requirements.")
-        st.info("Click 'Proceed with Application' to continue with the interview process.")
-        
-        if st.button("Proceed with Application", key="proceed_button"):
-            print("DEBUG: Proceed button clicked")  # Debug
-            with st.spinner("🔄 Processing your application..."):
-                try:
-                    print("DEBUG: Creating email agent")  # Debug
-                    email_agent = create_email_agent()
-                    print(f"DEBUG: Email agent created: {email_agent}")  # Debug
+        # Email input with session state
+        email = st.text_input(
+            "Candidate's email address",
+            value=st.session_state.candidate_email,
+            key="email_input"
+        )
+        st.session_state.candidate_email = email
+
+        # Analysis and next steps
+        if st.session_state.resume_text and email and not st.session_state.analysis_complete:
+            if st.button("Analyze Resume"):
+                with st.spinner("Analyzing your resume..."):
+                    resume_analyzer = create_resume_analyzer()
+                    email_agent = create_email_agent()  # Create email agent here
                     
-                    print("DEBUG: Creating scheduler agent")  # Debug
-                    scheduler_agent = create_scheduler_agent()
-                    print(f"DEBUG: Scheduler agent created: {scheduler_agent}")  # Debug
-
-                    # 3. Send selection email
-                    with st.status("📧 Sending confirmation email...", expanded=True) as status:
-                        print(f"DEBUG: Attempting to send email to {st.session_state.candidate_email}")  # Debug
-                        send_selection_email(
-                            email_agent,
-                            st.session_state.candidate_email,
-                            role
+                    if resume_analyzer and email_agent:
+                        logger.info("Starting resume analysis")
+                        is_selected, feedback = analyze_resume(
+                            st.session_state.resume_text,
+                            role,
+                            resume_analyzer
                         )
-                        print("DEBUG: Email sent successfully")  # Debug
-                        status.update(label="✅ Confirmation email sent!")
+                        logger.info(f"Analysis complete - Selected: {is_selected}, Feedback: {feedback}")
 
-                    # 4. Schedule interview
-                    with st.status("📅 Scheduling interview...", expanded=True) as status:
-                        print("DEBUG: Attempting to schedule interview")  # Debug
+                        if is_selected:
+                            db_helper.save_candidate(email, role, "Selected", feedback, st.session_state.resume_text)
+                            st.success("Congratulations! Your skills match our requirements.")
+                            st.session_state.analysis_complete = True
+                            st.session_state.is_selected = True
+                            st.rerun()
+                        else:
+                            db_helper.save_candidate(email, role, "Rejected", feedback, st.session_state.resume_text)
+                            st.warning("Unfortunately, your skills don't match our requirements.")
+                            st.write(f"Feedback: {feedback}")
+                            
+                            # Send rejection email
+                            with st.spinner("Sending feedback email..."):
+                                try:
+                                    send_rejection_email(
+                                        email_agent=email_agent,
+                                        to_email=email,
+                                        role=role,
+                                        feedback=feedback
+                                    )
+                                    st.info("We've sent you an email with detailed feedback.")
+                                except Exception as e:
+                                    logger.error(f"Error sending rejection email: {e}")
+                                    st.error("Could not send feedback email. Please try again.")
+
+        if st.session_state.get('analysis_complete') and st.session_state.get('is_selected', False):
+            st.success("Congratulations! Your skills match our requirements.")
+            
+            # Automatically process the application if not already done
+            if not st.session_state.get('application_processed', False):
+                with st.spinner("🔄 Automatically scheduling your interview..."):
+                    try:
+                        email_agent = create_email_agent()
+                        scheduler_agent = create_scheduler_agent()
+                        
+                        # Schedule interview and send combined email invitation
                         schedule_interview(
                             scheduler_agent,
                             st.session_state.candidate_email,
                             email_agent,
                             role
                         )
-                        print("DEBUG: Interview scheduled successfully")  # Debug
-                        status.update(label="✅ Interview scheduled!")
 
-                    print("DEBUG: All processes completed successfully")  # Debug
-                    st.success("""
-                        🎉 Application Successfully Processed!
-                        
-                        Please check your email for:
-                        1. Selection confirmation ✅
-                        2. Interview details with Zoom link 🔗
-                        
-                        Next steps:
-                        1. Review the role requirements
-                        2. Prepare for your technical interview
-                        3. Join the interview 5 minutes early
-                    """)
+                        st.session_state.application_processed = True
+                        st.rerun()
 
-                except Exception as e:
-                    print(f"DEBUG: Error occurred: {str(e)}")  # Debug
-                    print(f"DEBUG: Error type: {type(e)}")  # Debug
-                    import traceback
-                    print(f"DEBUG: Full traceback: {traceback.format_exc()}")  # Debug
-                    st.error(f"An error occurred: {str(e)}")
-                    st.error("Please try again or contact support.")
+                    except Exception as e:
+                        logger.error(f"Error in automatic processing: {e}")
+                        st.error(f"An error occurred during automatic processing: {str(e)}")
+                        st.error("Please try again or contact support.")
+            else:
+                st.success("""
+                    🎉 Application Successfully Processed!
+                    
+                    Please check your email for:
+                    1. Selection confirmation ✅
+                    2. Interview details with Zoom link 🔗
+                    
+                    Next steps:
+                    1. Review the role requirements
+                    2. Prepare for your technical interview
+                    3. Join the interview 5 minutes early
+                """)
+
+    # Dashboard is now standalone and served on port 8502
 
     # Reset button
     if st.sidebar.button("Reset Application"):
-        for key in st.session_state.keys():
-            if key != 'gemini_api_key':
+        for key in list(st.session_state.keys()):
+            if key not in ['openrouter_api_key', 'openrouter_model']:
                 del st.session_state[key]
         st.rerun()
 
