@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR CRM - Candidate Pipeline</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --navbar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-tertiary: #64748b;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success-color: #16a34a;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --danger-color: #dc2626;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Top Navbar */
+        header {
+            background-color: var(--navbar-bg);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1.25rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .header-title p {
+            font-size: 0.8125rem;
+            color: var(--text-tertiary);
+            margin-top: 0.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Main Workspace Container */
+        .container {
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 3rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Stats Cards - flat, clean CRM style */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-val {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card.selected {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .stat-card.rejected {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .stat-card.total {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* CRM Controls Bar */
+        .controls-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1.25rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 300px;
+            flex-grow: 1;
+            max-width: 420px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 0.625rem 1rem 0.625rem 2.25rem;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper select {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 0.625rem 2rem 0.625rem 1rem;
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-size: 0.875rem;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.15s ease;
+        }
+
+        .select-wrapper select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-30%) rotate(45deg);
+            width: 5px;
+            height: 5px;
+            border-right: 1.5px solid var(--text-tertiary);
+            border-bottom: 1.5px solid var(--text-tertiary);
+            pointer-events: none;
+        }
+
+        .refresh-btn {
+            background: #ffffff;
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 0.625rem 1.25rem;
+            font-family: var(--font-main);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .refresh-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .refresh-btn:active {
+            background: #f1f5f9;
+        }
+
+        /* Main Data Card */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 1rem 1.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 1.125rem 1.25rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--card-border);
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* CRM Details and Badges */
+        .candidate-email {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.1875rem 0.5rem;
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3125rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .status-badge.selected {
+            background-color: var(--success-bg);
+            color: var(--success-color);
+            border: 1px solid var(--success-border);
+        }
+
+        .status-badge.rejected {
+            background-color: var(--danger-bg);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-border);
+        }
+
+        .zoom-id {
+            font-family: var(--font-mono);
+            background: #f8fafc;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+            color: var(--text-primary);
+            border: 1px solid #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            min-width: 120px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease;
+            padding: 1px;
+        }
+
+        .copy-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-color);
+            color: #ffffff;
+            padding: 0.4375rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .action-link:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-view-feedback {
+            background: #ffffff;
+            color: var(--text-secondary);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 0.4375rem 0.875rem;
+            font-family: var(--font-main);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-view-feedback:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: var(--text-primary);
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            padding: 5rem 2rem;
+            text-align: center;
+            color: var(--text-tertiary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .empty-state svg {
+            width: 40px;
+            height: 40px;
+            color: #cbd5e1;
+        }
+
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+        }
+
+        /* Modals & Dialogs - Clean flat CRM design */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 680px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transform: translateY(15px);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.875rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: color 0.1s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .close-modal-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Modal tabs styling */
+        .modal-tabs {
+            display: flex;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-tab-btn {
+            background: none;
+            border: none;
+            padding: 0.625rem 0;
+            color: var(--text-tertiary);
+            font-family: var(--font-main);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+            outline: none;
+        }
+
+        .modal-tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-tab-btn.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .modal-tab-panel {
+            display: none;
+        }
+
+        .modal-tab-panel.active {
+            display: block;
+        }
+
+        .modal-body {
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 8px;
+            padding-top: 0.75rem;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        /* Inner container elements for tabs info */
+        .email-log-card {
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.875rem;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .email-log-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .email-subject {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .email-time {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+
+        .email-body {
+            white-space: pre-wrap;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            max-height: 180px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            background: #ffffff;
+            padding: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid var(--card-border);
+        }
+
+        .resume-text-container {
+            white-space: pre-wrap;
+            font-family: var(--font-main);
+            font-size: 0.875rem;
+            background: #f8fafc;
+            border: 1px solid var(--card-border);
+            padding: 1.25rem;
+            border-radius: 6px;
+            color: var(--text-primary);
+            max-height: 340px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        /* Clipboard Toast Alert */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--text-primary);
+            color: #ffffff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Fully Responsive CSS Layouts */
+        @media (max-width: 1024px) {
+            header {
+                padding: 1.25rem 2rem;
+            }
+
+            .container {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem 1.5rem;
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .controls-card {
+                padding: 1rem 1.25rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: unset;
+                max-width: none;
+            }
+
+            .select-wrapper select {
+                width: 100%;
+            }
+
+            .refresh-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>Candidate Pipeline</h1>
+            <p><span class="status-dot"></span> SQLite Database Synchronized</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- CRM Pipeline Counters -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <span class="stat-label">Total Pipeline</span>
+                <span class="stat-val" id="stats-total">0</span>
+            </div>
+            <div class="stat-card selected">
+                <span class="stat-label">Selected / Interviews</span>
+                <span class="stat-val" id="stats-selected">0</span>
+            </div>
+            <div class="stat-card rejected">
+                <span class="stat-label">Archived / Rejected</span>
+                <span class="stat-val" id="stats-rejected">0</span>
+            </div>
+        </div>
+
+        <!-- CRM Controls Panel -->
+        <div class="controls-card">
+            <div class="filter-group">
+                <!-- Search Inputs -->
+                <div class="search-box">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="dashboard-search" placeholder="Search by email or review keywords...">
+                </div>
+
+                <!-- Roles Options dropdown -->
+                <div class="select-wrapper">
+                    <select id="role-select">
+                        <option value="All">All Pipelines</option>
+                        <option value="ai_ml_engineer">AI & ML Engineer</option>
+                        <option value="frontend_engineer">Frontend Engineer</option>
+                        <option value="backend_engineer">Backend Engineer</option>
+                    </select>
+                </div>
+
+                <!-- Status Options dropdown -->
+                <div class="select-wrapper">
+                    <select id="status-select">
+                        <option value="All">All Statuses</option>
+                        <option value="Selected">Selected</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Sync database control -->
+            <button class="refresh-btn" id="btn-refresh">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.5s ease;" id="refresh-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12"></path>
+                </svg>
+                Sync Pipeline
+            </button>
+        </div>
+
+        <!-- Pipeline Data Grid -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 25%">Applicant Email</th>
+                            <th style="width: 15%">Applied Role</th>
+                            <th style="width: 12%">Status</th>
+                            <th style="width: 12%">Zoom ID</th>
+                            <th style="width: 13%">Meeting Date/Time</th>
+                            <th style="width: 10%">Invite</th>
+                            <th style="width: 8%">Assessment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidates-tbody">
+                        <!-- Content loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Fallback Empty CRM state -->
+            <div id="empty-view" class="empty-state" style="display: none;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                <h3>No candidates in view</h3>
+                <p>Modify search filters or applied role settings to locate matching records.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CRM Candidate Details Dialog Drawer with Tabs -->
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-candidate-title">Assessment Summary</h3>
+                <button class="close-modal-btn" id="btn-close-modal">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Navigation Tabs -->
+            <div class="modal-tabs">
+                <button class="modal-tab-btn active" onclick="switchModalTab(event, 'tab-assessment')">Assessment</button>
+                <button class="modal-tab-btn" onclick="switchModalTab(event, 'tab-emails')">Emails Log</button>
+                <button class="modal-tab-btn" onclick="switchModalTab(event, 'tab-resume')">Resume View</button>
+            </div>
+
+            <!-- Modal Tab Panels -->
+            <div id="tab-assessment" class="modal-tab-panel active">
+                <div class="modal-body" id="modal-feedback-content">
+                    <!-- Assessment content loaded here -->
+                </div>
+            </div>
+            <div id="tab-emails" class="modal-tab-panel">
+                <div class="modal-body" id="modal-emails-content">
+                    <!-- Emails list loaded here -->
+                </div>
+            </div>
+            <div id="tab-resume" class="modal-tab-panel">
+                <div class="modal-body" id="modal-resume-content">
+                    <!-- Resume content loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert toast notification -->
+    <div class="toast" id="copy-toast">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+        </svg>
+        Zoom Meeting ID copied
+    </div>
+
+    <script>
+        let allCandidates = [];
+
+        // UI formatting tools
+        function formatRole(role) {
+            if (!role) return '';
+            return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        function formatDateTime(isoString) {
+            if (!isoString || isoString === 'N/A') return 'N/A';
+            try {
+                const date = new Date(isoString);
+                if (isNaN(date.getTime())) return isoString;
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                }) + ' at ' + date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return isoString;
+            }
+        }
+
+        // Copy actions
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('copy-toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2200);
+            }).catch(err => {
+                console.error('Copy operations failed: ', err);
+            });
+        }
+
+        // Modal Tab Switching Logic
+        function switchModalTab(event, panelId) {
+            const tabs = document.querySelectorAll('.modal-tab-btn');
+            tabs.forEach(t => t.classList.remove('active'));
+
+            const panels = document.querySelectorAll('.modal-tab-panel');
+            panels.forEach(p => p.classList.remove('active'));
+
+            if (event) {
+                event.currentTarget.classList.add('active');
+            } else {
+                document.querySelector('.modal-tab-btn').classList.add('active');
+            }
+
+            document.getElementById(panelId).classList.add('active');
+        }
+
+        // Show assessor details with parsed email records and resume
+        function showFeedback(email, feedback, resumeText, sentEmailsJsonString) {
+            document.getElementById('modal-candidate-title').innerText = `${email} Details`;
+            
+            // Assessment content
+            document.getElementById('modal-feedback-content').innerHTML = feedback ? feedback.replace(/\n/g, '<br>') : 'No details recorded.';
+            
+            // Emails list content
+            const emailsContainer = document.getElementById('modal-emails-content');
+            emailsContainer.innerHTML = '';
+            
+            let emails = [];
+            if (sentEmailsJsonString) {
+                try {
+                    emails = typeof sentEmailsJsonString === 'string' ? JSON.parse(sentEmailsJsonString) : sentEmailsJsonString;
+                } catch(e) {
+                    console.error('Failed to parse sent_emails:', e);
+                }
+            }
+            
+            if (emails.length === 0) {
+                emailsContainer.innerHTML = '<div style="color: var(--text-tertiary); font-style: italic; text-align: center; padding: 2rem;">No emails logged for this candidate.</div>';
+            } else {
+                emails.forEach(email => {
+                    const card = document.createElement('div');
+                    card.className = 'email-log-card';
+                    card.innerHTML = `
+                        <div class="email-log-card-header">
+                            <span class="email-subject">${email.subject}</span>
+                            <span class="email-time">${formatDateTime(email.timestamp)}</span>
+                        </div>
+                        <div class="email-body">${email.body}</div>
+                    `;
+                    emailsContainer.appendChild(card);
+                });
+            }
+
+            // Resume content
+            const resumeContainer = document.getElementById('modal-resume-content');
+            if (resumeText) {
+                resumeContainer.innerHTML = `<div class="resume-text-container">${resumeText}</div>`;
+            } else {
+                resumeContainer.innerHTML = '<div style="color: var(--text-tertiary); font-style: italic; text-align: center; padding: 2rem;">No resume text saved.</div>';
+            }
+
+            // Reset modal active panel to 'Assessment'
+            switchModalTab(null, 'tab-assessment');
+
+            // Open modal drawer
+            document.getElementById('feedback-modal').classList.add('active');
+        }
+
+        // Setup modal close actions
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            document.getElementById('feedback-modal').classList.remove('active');
+        });
+        document.getElementById('feedback-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('feedback-modal')) {
+                document.getElementById('feedback-modal').classList.remove('active');
+            }
+        });
+
+        // Compute metrics counts
+        function updateStats(candidatesList) {
+            const total = candidatesList.length;
+            const selected = candidatesList.filter(c => c.status === 'Selected').length;
+            const rejected = candidatesList.filter(c => c.status === 'Rejected').length;
+
+            document.getElementById('stats-total').innerText = total;
+            document.getElementById('stats-selected').innerText = selected;
+            document.getElementById('stats-rejected').innerText = rejected;
+        }
+
+        // Render dynamic table
+        function renderTable(candidatesToRender) {
+            const tbody = document.getElementById('candidates-tbody');
+            const emptyView = document.getElementById('empty-view');
+            tbody.innerHTML = '';
+
+            if (candidatesToRender.length === 0) {
+                emptyView.style.display = 'flex';
+                return;
+            }
+            emptyView.style.display = 'none';
+
+            candidatesToRender.forEach((c, idx) => {
+                const tr = document.createElement('tr');
+
+                // #
+                const tdIndex = document.createElement('td');
+                tdIndex.innerText = idx + 1;
+                tr.appendChild(tdIndex);
+
+                // Email
+                const tdEmail = document.createElement('td');
+                tdEmail.innerHTML = `<span class="candidate-email">${c.email}</span>`;
+                tr.appendChild(tdEmail);
+
+                // Applied Role
+                const tdRole = document.createElement('td');
+                tdRole.innerHTML = `<span class="role-badge">${formatRole(c.role)}</span>`;
+                tr.appendChild(tdRole);
+
+                // Status
+                const tdStatus = document.createElement('td');
+                const statusClass = c.status === 'Selected' ? 'selected' : 'rejected';
+                tdStatus.innerHTML = `<span class="status-badge ${statusClass}">${c.status}</span>`;
+                tr.appendChild(tdStatus);
+
+                // Zoom ID
+                const tdMeetingId = document.createElement('td');
+                const meetingIdVal = c.meeting_id && c.meeting_id !== 'N/A' ? c.meeting_id : 'N/A';
+                if (meetingIdVal !== 'N/A') {
+                    tdMeetingId.innerHTML = `
+                        <div class="zoom-id">
+                            <span>${meetingIdVal}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${meetingIdVal}')" title="Copy Meeting ID">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    tdMeetingId.innerHTML = `<span style="color: var(--text-tertiary); font-style: italic;">N/A</span>`;
+                }
+                tr.appendChild(tdMeetingId);
+
+                // Meeting Date/Time
+                const tdMeetingTime = document.createElement('td');
+                tdMeetingTime.innerText = formatDateTime(c.meeting_time);
+                tr.appendChild(tdMeetingTime);
+
+                // Call invite link
+                const tdZoomLink = document.createElement('td');
+                if (c.meeting_link && c.meeting_link !== 'N/A' && c.meeting_link !== 'Manual Link') {
+                    tdZoomLink.innerHTML = `<a href="${c.meeting_link}" target="_blank" class="action-link">Join Call</a>`;
+                } else {
+                    tdZoomLink.innerHTML = `<span style="color: var(--text-tertiary); font-style: italic;">N/A</span>`;
+                }
+                tr.appendChild(tdZoomLink);
+
+                // Feedback/Assessment programmatically hooked to avoid string escapes crashes
+                const tdFeedback = document.createElement('td');
+                const btn = document.createElement('button');
+                btn.className = 'btn-view-feedback';
+                btn.innerText = 'Review';
+                btn.onclick = function() {
+                    showFeedback(c.email, c.feedback, c.resume_text, c.sent_emails);
+                };
+                tdFeedback.appendChild(btn);
+                tr.appendChild(tdFeedback);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Apply filters locally
+        function applyFilters() {
+            const roleFilter = document.getElementById('role-select').value;
+            const statusFilter = document.getElementById('status-select').value;
+            const searchVal = document.getElementById('dashboard-search').value.toLowerCase().trim();
+
+            let filtered = allCandidates;
+
+            // Role selection
+            if (roleFilter !== 'All') {
+                filtered = filtered.filter(c => c.role === roleFilter);
+            }
+
+            // Status selection
+            if (statusFilter !== 'All') {
+                filtered = filtered.filter(c => c.status === statusFilter);
+            }
+
+            // Keyword Search
+            if (searchVal) {
+                filtered = filtered.filter(c =>
+                    (c.email && c.email.toLowerCase().includes(searchVal)) ||
+                    (c.feedback && c.feedback.toLowerCase().includes(searchVal))
+                );
+            }
+
+            renderTable(filtered);
+        }
+
+        // Fetch Pipeline records
+        async function fetchCandidates() {
+            const icon = document.getElementById('refresh-icon');
+            icon.style.transform = 'rotate(360deg)';
+
+            try {
+                const response = await fetch('/api/candidates');
+                if (!response.ok) throw new Error('API fetch failed');
+
+                allCandidates = await response.json();
+                updateStats(allCandidates);
+                applyFilters();
+            } catch (err) {
+                console.error('Fetch operations failed:', err);
+            } finally {
+                setTimeout(() => {
+                    icon.style.transform = 'rotate(0deg)';
+                }, 400);
+            }
+        }
+
+        // Hooks & events
+        document.getElementById('role-select').addEventListener('change', applyFilters);
+        document.getElementById('status-select').addEventListener('change', applyFilters);
+        document.getElementById('dashboard-search').addEventListener('input', applyFilters);
+        document.getElementById('btn-refresh').addEventListener('click', fetchCandidates);
+
+        // Bootstrap on load
+        window.addEventListener('DOMContentLoaded', fetchCandidates);
+    </script>
+</body>
+
+</html>
