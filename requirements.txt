@@ -6,3 +6,4 @@ python-dotenv>=1.0.0
 streamlit-pdf-viewer>=0.0.14
 # agno framework (adjust version if you pin it in production)
 agno
+google-genai
