@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Workspace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+</head>
+<body>
+  <div class="sidebar-layout">
+    <div id="shared-sidebar-root"></div>
+    <script src="/ui/org/sidebar-loader.js" defer></script>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Settings</span>
+        </div>
+        <div class="user-menu">
+          <span class="badge info text-xs">Growth Plan</span>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this, 'general')">General</div>
+          <div class="tab" onclick="switchTab(this, 'branding')">Branding</div>
+          <div class="tab" onclick="switchTab(this, 'billing')">Billing & Usage</div>
+          <div class="tab" onclick="switchTab(this, 'danger')">Danger Zone</div>
+        </div>
+
+        <div id="tab-general" class="tab-content">
+          <div class="card mb-4">
+            <div class="card-header"><h3>Organization Details</h3></div>
+            <div class="card-body">
+              <form id="generalForm">
+                <div class="form-group">
+                  <label>Organization Name</label>
+                  <input type="text" name="name" placeholder="Organization name" />
+                </div>
+                <div class="form-group">
+                  <label>Contact Email</label>
+                  <input type="email" name="contact_email" placeholder="contact@company.com" />
+                </div>
+                <div class="form-group">
+                  <label>Contact Phone</label>
+                  <input type="text" name="contact_phone" placeholder="+91 98765 43210" />
+                </div>
+                <div class="form-group">
+                  <label>Website</label>
+                  <input type="text" name="website" placeholder="https://company.com" />
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-branding" class="tab-content hidden">
+          <div class="card mb-4">
+            <div class="card-header"><h3>Public Portal Branding</h3></div>
+            <div class="card-body">
+              <form id="brandingForm">
+                <div class="form-group">
+                  <label>Logo URL</label>
+                  <input type="text" name="logo_url" placeholder="https://..." />
+                </div>
+                <div class="form-group">
+                  <label>Primary Color</label>
+                  <div class="flex items-center gap-3">
+                    <input type="color" name="primary_color" value="#2563eb" style="width:50px;height:36px;padding:2px;" />
+                    <input type="text" name="primary_color_text" value="#2563eb" style="width:120px;" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Custom Domain</label>
+                  <input type="text" name="custom_domain" placeholder="careers.yourcompany.com" />
+                  <div class="input-hint">Point this domain to our servers via CNAME.</div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Branding</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-billing" class="tab-content hidden">
+          <div class="card mb-4">
+            <div class="card-header"><h3>Current Plan</h3>
+              <span class="badge success">Growth Plan — Active</span>
+            </div>
+            <div class="card-body">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <div class="text-sm text-muted mb-1">Monthly Price</div>
+                  <div class="text-xl font-bold">₹2,499<span class="text-sm text-muted font-normal">/mo</span></div>
+                </div>
+                <div>
+                  <div class="text-sm text-muted mb-1">Resume Limit</div>
+                  <div class="text-xl font-bold">1,000<span class="text-sm text-muted font-normal">/mo</span></div>
+                </div>
+                <div>
+                  <div class="text-sm text-muted mb-1">Team Seats</div>
+                  <div class="text-xl font-bold">10<span class="text-sm text-muted font-normal">/mo</span></div>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="flex items-center justify-between text-sm mb-1"><span>Resumes used this month</span><span>0 / 1,000</span></div>
+                <div class="score-bar"><div class="score-bar-fill strong" style="width:0%;"></div></div>
+              </div>
+              <div class="flex gap-2 mt-4">
+                <button class="btn btn-primary" onclick="showToast('Upgrade flow would open here','info')">Upgrade Plan</button>
+                <button class="btn btn-outline" onclick="showToast('Billing history would load here','info')">View Invoices</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-danger" class="tab-content hidden">
+          <div class="card" style="border-color:var(--danger-light);">
+            <div class="card-header" style="background:#fef2f2;"><h3 style="color:#991b1b;">Danger Zone</h3></div>
+            <div class="card-body">
+              <p class="text-sm text-muted mb-3">These actions are irreversible. Proceed with caution.</p>
+              <div class="flex items-center justify-between p-3" style="background:var(--gray-50);border-radius:var(--radius);margin-bottom:10px;">
+                <div><strong>Export All Data</strong><p class="text-sm text-muted">Download all candidates, resumes, and applications as JSON.</p></div>
+                <button class="btn btn-outline btn-sm" onclick="showToast('Data export initiated (demo)','info')">Export</button>
+              </div>
+              <div class="flex items-center justify-between p-3" style="background:var(--gray-50);border-radius:var(--radius);margin-bottom:10px;">
+                <div><strong>Delete Organization</strong><p class="text-sm text-muted">Permanently delete all data including candidates and openings.</p></div>
+                <button class="btn btn-danger btn-sm" onclick="showToast('This action is disabled in demo mode','error')">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    function switchTab(el, tabName) {
+      document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
+      el.classList.add("active");
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+      document.getElementById("tab-" + tabName).classList.remove("hidden");
+    }
+
+    async function loadTenantSettings() {
+      try {
+        const res = await fetchWithAuth("/api/v1/users/tenant/me");
+        if (res.ok) {
+          const tenant = await res.json();
+          
+          // Populating General Settings Form
+          const genForm = document.getElementById("generalForm");
+          genForm.querySelector("[name='name']").value = tenant.name || "";
+          genForm.querySelector("[name='contact_email']").value = tenant.contact_email || "";
+          genForm.querySelector("[name='contact_phone']").value = tenant.contact_phone || "";
+          genForm.querySelector("[name='website']").value = tenant.website || "";
+
+          // Populating Branding Settings Form
+          const brandForm = document.getElementById("brandingForm");
+          brandForm.querySelector("[name='logo_url']").value = tenant.logo_url || "";
+          brandForm.querySelector("[name='primary_color']").value = tenant.primary_color || "#2563eb";
+          brandForm.querySelector("[name='primary_color_text']").value = tenant.primary_color || "#2563eb";
+          brandForm.querySelector("[name='custom_domain']").value = tenant.custom_domain || "";
+
+          // Populate Billing Tab
+          if (tenant.subscription) {
+            const sub = tenant.subscription;
+            // Update plans
+            const currentPlanElements = document.querySelectorAll(".badge.success");
+            currentPlanElements.forEach(el => {
+              el.textContent = `${sub.plan.toUpperCase()} PLAN — ${sub.status.toUpperCase()}`;
+            });
+            
+            // Monthly Price
+            const priceEl = document.querySelector("#tab-billing .grid > div:nth-child(1) .text-xl");
+            if (priceEl) priceEl.innerHTML = `₹${sub.amount || 0}<span class="text-sm text-muted font-normal">/mo</span>`;
+            
+            // Resume Limit
+            const resumeLimitEl = document.querySelector("#tab-billing .grid > div:nth-child(2) .text-xl");
+            if (resumeLimitEl) resumeLimitEl.innerHTML = `${sub.resume_limit || 0}<span class="text-sm text-muted font-normal">/mo</span>`;
+
+            // User Seats
+            const userLimitEl = document.querySelector("#tab-billing .grid > div:nth-child(3) .text-xl");
+            if (userLimitEl) userLimitEl.innerHTML = `${sub.user_limit || 0}<span class="text-sm text-muted font-normal"> seats</span>`;
+
+            // Resumes Used Progress Bar
+            const usedText = document.querySelector("#tab-billing .mt-4 .flex span:nth-child(2)");
+            if (usedText) usedText.textContent = `${sub.resumes_used || 0} / ${sub.resume_limit || 0}`;
+
+            const percent = sub.resume_limit ? Math.min(100, Math.round((sub.resumes_used / sub.resume_limit) * 100)) : 0;
+            const barFill = document.querySelector("#tab-billing .score-bar-fill");
+            if (barFill) barFill.style.width = `${percent}%`;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load settings:", e);
+        showToast("Error loading settings", "error");
+      }
+    }
+
+    document.getElementById("generalForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form));
+
+      try {
+        const res = await fetchWithAuth("/api/v1/users/tenant/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          showToast("Organization details saved", "success");
+          await loadTenantSettings();
+        } else {
+          showToast("Failed to save changes", "error");
+        }
+      } catch (err) {
+        console.error("General Form Save Error:", err);
+        showToast("Error saving changes", "error");
+      }
+    });
+
+    document.getElementById("brandingForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form));
+
+      try {
+        const res = await fetchWithAuth("/api/v1/users/tenant/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            logo_url: data.logo_url || null,
+            primary_color: data.primary_color || null,
+            custom_domain: data.custom_domain || null
+          })
+        });
+        if (res.ok) {
+          showToast("Branding updated", "success");
+          await loadTenantSettings();
+        } else {
+          showToast("Failed to update branding", "error");
+        }
+      } catch (err) {
+        console.error("Branding Save Error:", err);
+        showToast("Error updating branding", "error");
+      }
+    });
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    async function init() {
+      const user = await requireAuth(["super_admin", "org_admin", "org_member"]);
+      if (user) {
+        await loadTenantSettings();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

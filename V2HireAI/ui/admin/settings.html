@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/ui/shared.css">
+</head>
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header"><i class="fas fa-shield-alt" style="margin-right:8px;"></i> Platform Admin</div>
+      <nav class="sidebar-nav">
+        <a href="/ui/admin/index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="/ui/admin/organizations.html"><i class="fas fa-building"></i> Organizations</a>
+        <a href="/ui/admin/users.html"><i class="fas fa-users"></i> Users</a>
+        <a href="/ui/admin/subscriptions.html"><i class="fas fa-credit-card"></i> Subscriptions</a>
+        <a href="/ui/admin/settings.html" class="active"><i class="fas fa-cog"></i> Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="color:#fff;width:100%;justify-content:center;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Platform Settings</span>
+        </div>
+      </header>
+      <div class="page-body">
+        <div class="card mb-4">
+          <div class="card-header"><h3>Platform Configuration</h3></div>
+          <div class="card-body">
+            <form id="settingsForm">
+              <div class="form-group"><label>Platform Name</label><input type="text" id="platformName" readonly /></div>
+              <div class="form-group"><label>Support Email</label><input type="email" id="supportEmail" readonly /></div>
+              <div class="form-group"><label>Default Plan</label><input type="text" id="defaultPlan" readonly /></div>
+              <div class="form-group"><label>App Version</label><input type="text" id="appVersion" readonly /></div>
+              <p class="text-sm text-muted">Platform settings are environment-managed and shown here for visibility.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    function showToast(m, t="info") { const t2=document.createElement("div"); t2.className="toast "+t; t2.textContent=m; document.getElementById("toastContainer").appendChild(t2); setTimeout(()=>t2.remove(),4000); }
+    async function init() {
+      const user = await requireAuth(["super_admin"]);
+      if (!user) return;
+      try {
+        const res = await fetchWithAuth("/api/v1/admin/tenants/platform-settings");
+        if (!res.ok) throw new Error("Failed to load platform settings");
+        const data = await res.json();
+        document.getElementById("platformName").value = data.platform_name || "";
+        document.getElementById("supportEmail").value = data.support_email || "";
+        document.getElementById("defaultPlan").value = data.default_plan || "";
+        document.getElementById("appVersion").value = data.app_version || "";
+      } catch (e) {
+        console.error("Failed to load platform settings:", e);
+        showToast("Failed to load platform settings", "error");
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

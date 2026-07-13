@@ -1,0 +1,45 @@
+# =============================================================================
+# Frontend Developer Job Profile
+# =============================================================================
+job_title: "Frontend Developer"
+job_level: "Mid-Level"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+required_skills:
+  - react
+  - javascript
+  - css
+  - html
+
+preferred_skills:
+  - typescript
+  - nextjs
+  - tailwindcss
+  - git
+  - redux
+  - webpack
+  - nodejs
+  - testing library
+  - jest
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+min_experience_years: 1
+preferred_experience_years: 4
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+preferred_education:
+  - btech
+  - mca
+  - bsc
+  - mtech
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+required_certifications: []
+preferred_certifications:
+  - "frontend"
+  - "react"
+  - "javascript"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+min_projects: 2
+preferred_projects: 3

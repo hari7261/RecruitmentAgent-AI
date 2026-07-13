@@ -1,0 +1,110 @@
+# =============================================================================
+# Education Degree Normalization Map
+# =============================================================================
+# Each top-level key is the NORMALIZED degree code (stored in DB and used
+# for ATS scoring comparison).
+# aliases: alternate spellings/abbreviations that map to this code.
+# =============================================================================
+btech:
+  aliases:
+    - "b.tech"
+    - "b tech"
+    - "bachelor of technology"
+    - "be"
+    - "b.e"
+    - "b.e."
+    - "bachelor of engineering"
+    - "b.eng"
+    - "beng"
+
+mtech:
+  aliases:
+    - "m.tech"
+    - "m tech"
+    - "master of technology"
+    - "me"
+    - "m.e"
+    - "m.e."
+    - "master of engineering"
+    - "m.eng"
+    - "meng"
+
+bsc:
+  aliases:
+    - "b.sc"
+    - "b sc"
+    - "b.sc."
+    - "bachelor of science"
+    - "bs"
+    - "b.s"
+    - "bsc (cs)"
+    - "bsc cs"
+    - "bsc it"
+    - "bsc (it)"
+
+msc:
+  aliases:
+    - "m.sc"
+    - "m sc"
+    - "m.sc."
+    - "master of science"
+    - "ms"
+    - "m.s"
+    - "msc cs"
+    - "msc it"
+
+bca:
+  aliases:
+    - "b.c.a"
+    - "bachelor of computer applications"
+
+mca:
+  aliases:
+    - "m.c.a"
+    - "master of computer applications"
+
+mba:
+  aliases:
+    - "m.b.a"
+    - "master of business administration"
+    - "pgdm"
+    - "post graduate diploma in management"
+
+bba:
+  aliases:
+    - "b.b.a"
+    - "bachelor of business administration"
+
+phd:
+  aliases:
+    - "ph.d"
+    - "ph.d."
+    - "doctor of philosophy"
+    - "doctorate"
+    - "doctoral"
+
+diploma:
+  aliases:
+    - "polytechnic"
+    - "3 year diploma"
+    - "diploma in engineering"
+    - "diploma in technology"
+
+highschool:
+  aliases:
+    - "12th"
+    - "class 12"
+    - "hsc"
+    - "higher secondary"
+    - "intermediate"
+    - "senior secondary"
+    - "10+2"
+    - "+2"
+
+secondary:
+  aliases:
+    - "10th"
+    - "class 10"
+    - "ssc"
+    - "secondary school"
+    - "matriculation"

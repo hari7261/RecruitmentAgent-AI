@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organizations — Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+</head>
+
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header"><i class="fas fa-shield-alt" style="margin-right:8px;"></i> Platform Admin</div>
+      <nav class="sidebar-nav">
+        <a href="/ui/admin/index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="/ui/admin/organizations.html" class="active"><i class="fas fa-building"></i> Organizations</a>
+        <a href="/ui/admin/users.html"><i class="fas fa-users"></i> Users</a>
+        <a href="/ui/admin/subscriptions.html"><i class="fas fa-credit-card"></i> Subscriptions</a>
+        <a href="/ui/admin/settings.html"><i class="fas fa-cog"></i> Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="color:#fff;width:100%;justify-content:center;" onclick="logout()"><i
+            class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden"
+            onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Organizations</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('createOrgModal')"><i class="fas fa-plus"></i> New
+          Org</button>
+      </header>
+      <div class="page-body">
+        <div class="card">
+          <div class="card-header">
+            <div class="search-box"><i class="fas fa-search"></i><input type="search" placeholder="Search orgs..."
+                oninput="renderOrgs()" /></div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Users</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="orgTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="createOrgModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Create Organization</h2><button class="modal-close" onclick="closeModal('createOrgModal')">&times;</button>
+      </div>
+      <form id="createOrgForm" class="modal-body">
+        <div class="form-group"><label>Name <span class="required">*</span></label><input type="text" name="name"
+            required /></div>
+        <div class="form-group"><label>Slug <span class="required">*</span></label><input type="text" name="slug"
+            required /></div>
+        <div class="form-group"><label>Admin Email <span class="required">*</span></label><input type="email"
+            name="admin_email" required /></div>
+        <div class="form-group"><label>Admin Password <span class="required">*</span> <span class="text-muted"
+              style="font-size:0.8rem;">(min 10 characters)</span></label><input type="text" name="admin_password"
+            required /></div>
+        <div class="form-group"><label>Contact Email <span class="required">*</span></label><input type="email"
+            name="contact_email" required /></div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('createOrgModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createOrg()">Create</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    let orgs = [];
+    const planBadge = p => ({ starter: "info", growth: "success", institute: "warning", enterprise: "gray" }[p] || "gray");
+
+    function renderOrgs() {
+      const tbody = document.getElementById("orgTable");
+      if (orgs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No organizations found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = orgs.map(o => `
+        <tr>
+          <td><strong>${escapeHtml(o.name)}</strong></td>
+          <td><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:0.8rem;">${escapeHtml(o.slug)}</code></td>
+          <td><span class="badge info">starter</span></td>
+          <td><span class="badge ${o.is_active ? 'success' : 'gray'}">${o.is_active ? 'active' : 'inactive'}</span></td>
+          <td>—</td>
+          <td class="text-muted text-sm">${o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</td>
+          <td><div class="actions"><button class="btn btn-ghost btn-xs" onclick="showToast('Edit details via API','info')"><i class="fas fa-edit"></i></button><button class="btn btn-ghost btn-xs" onclick="deleteOrg('${o.id}')"><i class="fas fa-trash" style="color:var(--danger);"></i></button></div></td>
+        </tr>
+      `).join("");
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add("open"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+    async function loadOrgs() {
+      const user = await requireAuth(["super_admin"]);
+      if (!user) return;
+      try {
+        const res = await fetchWithAuth("/api/v1/admin/tenants");
+        if (res.ok) {
+          orgs = await res.json();
+          renderOrgs();
+        }
+      } catch (e) {
+        console.error("Failed to load organizations:", e);
+        showToast("Error loading organizations", "error");
+      }
+    }
+
+    async function createOrg() {
+      const data = Object.fromEntries(new FormData(document.getElementById("createOrgForm")));
+      if (!data.name || !data.slug || !data.admin_email || !data.admin_password) {
+        showToast("Required fields missing", "error");
+        return;
+      }
+      try {
+        // B6 Fix: Call /api/v1/auth/register to register organization and admin user together
+        const res = await fetchWithAuth("/api/v1/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: data.name,
+            slug: data.slug,
+            contact_email: data.contact_email,
+            admin_email: data.admin_email,
+            admin_password: data.admin_password,
+            admin_name: data.name + " Admin"
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          let errMsg = "Registration failed";
+          if (result.detail) {
+            if (Array.isArray(result.detail)) {
+              errMsg = result.detail.map(d => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(", ");
+            } else {
+              errMsg = result.detail;
+            }
+          } else if (result.message) {
+            errMsg = result.message;
+          }
+          throw new Error(errMsg);
+        }
+
+        showToast("Organization and Admin created successfully!", "success");
+        closeModal("createOrgModal");
+        document.getElementById("createOrgForm").reset();
+        await loadOrgs();
+      } catch (e) {
+        console.error("Create org error:", e);
+        showToast(e.message || "Failed to create organization", "error");
+      }
+    }
+
+    async function deleteOrg(tenantId) {
+      if (!confirm("Delete this organization?")) return;
+      try {
+        const res = await fetchWithAuth(`/api/v1/admin/tenants/${tenantId}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          showToast("Organization deleted", "warning");
+          await loadOrgs();
+        } else {
+          const result = await res.json();
+          throw new Error(result.message || "Delete failed");
+        }
+      } catch (e) {
+        console.error("Delete org error:", e);
+        showToast(e.message || "Failed to delete organization", "error");
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    async function init() {
+      await loadOrgs();
+    }
+    init();
+  </script>
+</body>
+
+</html>

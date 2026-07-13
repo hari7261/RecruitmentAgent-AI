@@ -1,0 +1,45 @@
+# =============================================================================
+# Customer Support Job Profile
+# =============================================================================
+job_title: "Customer Support Representative"
+job_level: "Entry-Mid"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+required_skills:
+  - communication
+  - customer service
+  - problem solving
+  - active listening
+
+preferred_skills:
+  - zendesk
+  - crm
+  - chat support
+  - ticket management
+  - email communication
+  - public relations
+  - empathy
+  - multi-tasking
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+min_experience_years: 0
+preferred_experience_years: 2
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+preferred_education:
+  - ba
+  - bsc
+  - bcom
+  - bba
+  - highschool
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+required_certifications: []
+preferred_certifications:
+  - "customer support"
+  - "communication"
+  - "help desk"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+min_projects: 0
+preferred_projects: 1

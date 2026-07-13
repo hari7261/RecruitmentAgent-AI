@@ -1,0 +1,45 @@
+# =============================================================================
+# Manager Job Profile
+# =============================================================================
+job_title: "Product / Project Manager"
+job_level: "Senior"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+required_skills:
+  - project management
+  - agile
+  - leadership
+  - product strategy
+
+preferred_skills:
+  - scrum
+  - jira
+  - communication
+  - roadmap
+  - sql
+  - presentation
+  - stakeholder management
+  - analytical thinking
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+min_experience_years: 4
+preferred_experience_years: 8
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+preferred_education:
+  - mba
+  - btech
+  - mtech
+  - bba
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+required_certifications: []
+preferred_certifications:
+  - "pmp"
+  - "scrum master"
+  - "prince2"
+  - "agile"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+min_projects: 3
+preferred_projects: 5

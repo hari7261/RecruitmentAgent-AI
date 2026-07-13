@@ -1,0 +1,44 @@
+# =============================================================================
+# Sales Executive Job Profile
+# =============================================================================
+job_title: "Sales Executive / Account Manager"
+job_level: "Mid-Level"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+required_skills:
+  - communication
+  - sales
+  - negotiation
+  - business development
+
+preferred_skills:
+  - marketing
+  - crm
+  - excel
+  - analytical_thinking
+  - lead generation
+  - presentation
+  - public speaking
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+min_experience_years: 1
+preferred_experience_years: 3
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+preferred_education:
+  - bba
+  - mba
+  - bcom
+  - ba
+  - bsc
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+required_certifications: []
+preferred_certifications:
+  - "sales"
+  - "crm"
+  - "marketing"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+min_projects: 0
+preferred_projects: 2

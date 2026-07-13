@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Careers Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    :root {
+      --primary: #2563eb;
+    }
+    .portal-header {
+      background: #fff;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .portal-header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    .portal-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .portal-logo img {
+      max-height: 32px;
+      width: auto;
+    }
+    .portal-logo:hover {
+      text-decoration: none;
+    }
+    .portal-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+      color: #fff;
+      padding: 56px 0 48px;
+      text-align: center;
+    }
+    .hero h1 {
+      color: #fff;
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .hero p {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .stats-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: -28px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .stat-card .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .stat-card .icon.blue { background: var(--primary-light); color: var(--primary); }
+    .stat-card .icon.green { background: var(--success-light); color: var(--success); }
+    .stat-card .icon.orange { background: var(--warning-light); color: var(--warning); }
+    .stat-card .icon.purple { background: #f3e8ff; color: #9333ea; }
+    .stat-card .info h3 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-top: 4px;
+      letter-spacing: -0.02em;
+    }
+    .stat-card .info p {
+      color: var(--gray-500);
+      font-size: 0.85rem;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    .section-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .section-card .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-card .card-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .section-card .card-body {
+      padding: 0;
+    }
+    .app-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background 0.15s;
+      flex-wrap: wrap;
+    }
+    .app-row:last-child {
+      border-bottom: none;
+    }
+    .app-row:hover {
+      background: var(--gray-50);
+    }
+    .app-row .role {
+      font-weight: 600;
+      color: var(--gray-900);
+      font-size: 0.95rem;
+    }
+    .app-row .meta {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+    .app-row .meta span {
+      margin-right: 12px;
+    }
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #fff;
+      flex-shrink: 0;
+      padding: 0 8px;
+    }
+    .score-high { background: var(--success); }
+    .score-mid { background: var(--warning); }
+    .score-low { background: var(--danger); }
+
+    .quick-actions { display: grid; gap: 10px; }
+    .quick-action-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    .quick-action-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--gray-300);
+    }
+    .quick-action-card .qa-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .qa-icon.blue { background: var(--primary-light); color: var(--primary); }
+    .qa-icon.green { background: var(--success-light); color: var(--success); }
+    .qa-icon.orange { background: var(--warning-light); color: var(--warning); }
+    .qa-icon.purple { background: #f3e8ff; color: #9333ea; }
+
+    .recent-table { width: 100%; border-collapse: collapse; }
+    .recent-table th {
+      background: var(--gray-50);
+      font-weight: 600;
+      color: var(--gray-600);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .recent-table td {
+      padding: 14px 20px;
+      font-size: 0.88rem;
+      color: var(--gray-700);
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: middle;
+    }
+    .recent-table tr:last-child td { border-bottom: none; }
+    .recent-table tr:hover td { background: var(--gray-50); }
+    .recent-table .role-cell { font-weight: 600; color: var(--gray-900); }
+    .recent-table .meta-cell { font-size: 0.78rem; color: var(--gray-500); margin-top: 2px; }
+    .recent-table .score-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .score-pill.strong  { background: #dcfce7; color: #166534; }
+    .score-pill.hire    { background: #dbeafe; color: #1d4ed8; }
+    .score-pill.review  { background: #fef9c3; color: #713f12; }
+    .score-pill.reject  { background: #fee2e2; color: #991b1b; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-500);
+    }
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      color: var(--gray-300);
+    }
+    .empty-state h3 {
+      color: var(--gray-800);
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 767px) {
+      .hero {
+        padding: 40px 0 36px;
+      }
+      .hero h1 {
+        font-size: 1.5rem;
+      }
+      .hero p {
+        font-size: 0.95rem;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+        margin-top: -20px;
+      }
+      .portal-header {
+        position: relative;
+      }
+      .portal-nav {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+        padding: 16px 24px;
+        box-shadow: var(--shadow-lg);
+        gap: 12px;
+        z-index: 101;
+      }
+      .portal-nav.open {
+        display: flex;
+      }
+      .recent-table th,
+      .recent-table td {
+        padding: 10px 14px;
+        font-size: 0.8rem;
+      }
+      .recent-table thead {
+        display: none;
+      }
+      .recent-table tbody tr {
+        display: block;
+        padding: 14px;
+        border-bottom: 1px solid var(--gray-200);
+      }
+      .recent-table tbody tr:last-child {
+        border-bottom: none;
+      }
+      .recent-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: none;
+      }
+      .recent-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--gray-600);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-right: 8px;
+      }
+    }
+    @media (min-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (min-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="portal-header">
+    <div class="container">
+      <div class="flex items-center gap-3">
+        <button id="mobileMenuBtn" class="btn btn-ghost md:hidden" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <a href="#" id="logoLink" class="portal-logo">
+          <i class="fas fa-building" id="defaultLogoIcon" style="color:var(--primary);"></i>
+          <span id="orgName">Organization</span>
+        </a>
+      </div>
+      <nav class="portal-nav" id="portalNav">
+        <a href="#" id="navJobs" class="btn btn-ghost text-sm">Openings</a>
+        <a href="#" id="navDashboard" class="btn btn-ghost text-sm">Dashboard</a>
+        <a href="#" id="navApps" class="btn btn-ghost text-sm">My Applications</a>
+        <button type="button" id="candidateLogoutBtn" class="btn btn-outline btn-sm hidden">Logout</button>
+        <a href="/ui/auth/login.html" class="btn btn-primary btn-sm">For Employers</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1 id="welcomeTitle">Welcome back!</h1>
+      <p>Track your job applications, view AI evaluation scores, and explore new opportunities.</p>
+    </div>
+  </section>
+
+  <main class="container" style="padding:0 24px 64px;">
+    <div class="stats-grid mb-4">
+      <div class="stat-card">
+        <div class="info"><p>My Applications</p><h3 id="sTotal">0</h3></div>
+        <div class="icon blue"><i class="fas fa-file-alt"></i></div>
+      </div>
+      <div class="stat-card">
+        <div class="info"><p>Shortlisted</p><h3 id="sShortlisted">0</h3></div>
+        <div class="icon green"><i class="fas fa-star"></i></div>
+      </div>
+      <div class="stat-card">
+        <div class="info"><p>In Review</p><h3 id="sReview">0</h3></div>
+        <div class="icon orange"><i class="fas fa-clock"></i></div>
+      </div>
+      <div class="stat-card">
+        <div class="info"><p>Interviews</p><h3 id="sInterview">0</h3></div>
+        <div class="icon purple"><i class="fas fa-calendar-check"></i></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2">
+        <div class="section-card">
+          <div class="card-header">
+            <h3>Recent Applications</h3>
+            <a href="#" id="viewAllApps" class="btn btn-outline btn-sm">View All</a>
+          </div>
+          <div class="card-body" style="padding:0;" id="recentAppsList">
+            <div class="empty-state">
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Loading your applications...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-card">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div class="card-body" style="padding:16px 20px;">
+            <div class="quick-actions">
+              <a href="#" id="browseJobsBtn" class="quick-action-card">
+                <div class="qa-icon blue"><i class="fas fa-search"></i></div>
+                <div><strong style="font-size:0.9rem;">Browse Jobs</strong><p class="text-sm text-muted" style="margin:0;">Explore open positions</p></div>
+              </a>
+              <a href="#" id="myAppsBtn" class="quick-action-card">
+                <div class="qa-icon green"><i class="fas fa-list"></i></div>
+                <div><strong style="font-size:0.9rem;">My Applications</strong><p class="text-sm text-muted" style="margin:0;">Track status & scores</p></div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card mt-4">
+          <div class="card-header"><h3>Application Status</h3></div>
+          <div class="card-body" id="statusBreakdown" style="padding:16px 20px;">
+            <p class="text-sm text-muted">No applications yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="background:#fff;border-top:1px solid var(--gray-200);padding:24px 0;text-align:center;color:var(--gray-500);font-size:0.85rem;margin-top:48px;">
+    <div class="container">&copy; <span id="year"></span> <span id="footerOrg">Organization</span>. All rights reserved.</div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let orgSlug = urlParams.get('org');
+    if (!orgSlug) {
+      const pathParts = window.location.pathname.split('/');
+      const oIndex = pathParts.indexOf('o');
+      if (oIndex !== -1 && pathParts[oIndex + 1]) {
+        orgSlug = pathParts[oIndex + 1];
+      }
+    }
+    if (!orgSlug) {
+      window.location.href = '/portal/list';
+      throw new Error('Organization slug is required');
+    }
+
+    document.getElementById("logoLink").href = `/portal/o/${orgSlug}`;
+    document.getElementById("navJobs").href = `/portal/o/${orgSlug}`;
+    document.getElementById("navDashboard").href = `/portal/o/${orgSlug}/dashboard`;
+    document.getElementById("navApps").href = `/portal/o/${orgSlug}/my-applications`;
+    document.getElementById("browseJobsBtn").href = `/portal/o/${orgSlug}`;
+    document.getElementById("myAppsBtn").href = `/portal/o/${orgSlug}/my-applications`;
+    document.getElementById("viewAllApps").href = `/portal/o/${orgSlug}/my-applications`;
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const portalNav = document.getElementById("portalNav");
+    if (mobileMenuBtn && portalNav) {
+      mobileMenuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        portalNav.classList.toggle("open");
+      });
+      document.addEventListener("click", () => {
+        portalNav.classList.remove("open");
+      });
+    }
+
+    function scoreClass(s) {
+      if (s >= 80) return "score-high";
+      if (s >= 60) return "score-mid";
+      return "score-low";
+    }
+
+    function timeAgo(iso) {
+      const d = new Date(iso), now = new Date();
+      const diff = Math.floor((now - d) / 1000);
+      if (diff < 60) return "just now";
+      if (diff < 3600) return Math.floor(diff/60) + "m ago";
+      if (diff < 86400) return Math.floor(diff/3600) + "h ago";
+      return Math.floor(diff/86400) + "d ago";
+    }
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    const isSafeLogoUrl = value =>
+      typeof value === "string" && (value.startsWith("/") || /^https?:\/\//i.test(value));
+
+    async function fetchCandidateSession(url, options = {}) {
+      let res = await fetch(url, { ...options, credentials: 'include' });
+      if (res.status === 401) {
+        const refreshRes = await fetch('/api/v1/public/refresh', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        if (refreshRes.ok) {
+          res = await fetch(url, { ...options, credentials: 'include' });
+        }
+      }
+      return res;
+    }
+
+    async function getPortalSessionUser() {
+      const res = await fetchCandidateSession('/api/v1/public/me');
+      if (!res.ok) {
+        return null;
+      }
+      return await res.json();
+    }
+
+    async function syncCandidateNav() {
+      const currentUser = await getPortalSessionUser();
+      const logoutBtn = document.getElementById("candidateLogoutBtn");
+      if (!logoutBtn) return currentUser;
+      logoutBtn.classList.toggle("hidden", !(currentUser && currentUser.role === "candidate"));
+      return currentUser;
+    }
+
+    async function logoutCandidate() {
+      try {
+        await fetch('/api/v1/public/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } finally {
+        window.location.href = `/portal/o/${orgSlug}`;
+      }
+    }
+
+    async function loadPortalBranding() {
+      try {
+        const res = await fetch(`/portal/o/${orgSlug}?format=json`);
+        if (!res.ok) throw new Error("Failed to load branding");
+        const data = await res.json();
+
+        document.title = `Dashboard — ${data.organization.name}`;
+        document.getElementById("orgName").textContent = data.organization.name;
+        document.getElementById("footerOrg").textContent = data.organization.name;
+
+        if (isSafeLogoUrl(data.organization.logo_url)) {
+          document.getElementById("logoLink").innerHTML = `<img src="${data.organization.logo_url}" alt="${data.organization.name}" />`;
+        }
+        if (data.organization.primary_color) {
+          document.documentElement.style.setProperty('--primary', data.organization.primary_color);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function renderDashboard() {
+      const container = document.getElementById("recentAppsList");
+
+      try {
+        const currentUser = await syncCandidateNav();
+        if (currentUser && currentUser.role !== 'candidate') {
+          document.getElementById("sTotal").textContent = "0";
+          document.getElementById("sShortlisted").textContent = "0";
+          document.getElementById("sReview").textContent = "0";
+          document.getElementById("sInterview").textContent = "0";
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-user-lock"></i>
+              <h3>Candidate session required</h3>
+              <p>This browser is currently signed in with a non-candidate account. Use a private window, or sign out and reopen the candidate portal with your candidate session.</p>
+              <a href="/portal/o/${orgSlug}/candidate-login?next=${encodeURIComponent(`/portal/o/${orgSlug}/dashboard`)}" class="btn btn-primary mt-3">Candidate Login</a>
+              <a href="/portal/o/${orgSlug}" class="btn btn-primary mt-3"><i class="fas fa-search" style="margin-right:6px;"></i>Browse Openings</a>
+            </div>`;
+          document.getElementById("statusBreakdown").innerHTML = `<p class="text-sm text-muted">No applications yet.</p>`;
+          return;
+        }
+
+        const res = await fetchCandidateSession('/api/v1/public/my-applications');
+
+        if (res.status === 401 || res.status === 403) {
+          document.getElementById("sTotal").textContent = "0";
+          document.getElementById("sShortlisted").textContent = "0";
+          document.getElementById("sReview").textContent = "0";
+          document.getElementById("sInterview").textContent = "0";
+          container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-lock"></i>
+                <h3>Candidate session required</h3>
+                <p>${res.status === 403
+                  ? "This browser is currently signed in with a non-candidate account. Use a private window, or sign out and reopen the candidate portal with your candidate session."
+                  : "Apply from this browser to start tracking your applications here."}</p>
+                <a href="/portal/o/${orgSlug}/candidate-login?next=${encodeURIComponent(`/portal/o/${orgSlug}/dashboard`)}" class="btn btn-primary mt-3">Candidate Login</a>
+                <a href="/portal/o/${orgSlug}" class="btn btn-primary mt-3"><i class="fas fa-search" style="margin-right:6px;"></i>Browse Openings</a>
+              </div>`;
+          document.getElementById("statusBreakdown").innerHTML = `<p class="text-sm text-muted">No applications yet.</p>`;
+          return;
+        }
+
+        if (!res.ok) throw new Error("Failed to load dashboard applications");
+        const apps = await res.json();
+
+        document.getElementById("sTotal").textContent = apps.length;
+        document.getElementById("sShortlisted").textContent = apps.filter(a => a.status === "shortlisted").length;
+        document.getElementById("sReview").textContent = apps.filter(a => a.status === "review" || a.status === "applied").length;
+        document.getElementById("sInterview").textContent = apps.filter(a => a.status === "interviewing").length;
+
+        if (!apps.length) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-inbox"></i>
+              <h3>No applications yet</h3>
+              <p>Browse open positions and submit your first application.</p>
+              <a href="/portal/o/${orgSlug}" class="btn btn-primary mt-3"><i class="fas fa-search" style="margin-right:6px;"></i>Browse Openings</a>
+            </div>`;
+          document.getElementById("statusBreakdown").innerHTML = `<p class="text-sm text-muted">No applications yet.</p>`;
+          return;
+        }
+
+        const recent = apps.slice(0, 5);
+        container.innerHTML = `<table class="recent-table"><thead><tr><th>Role</th><th>Applied</th><th>Score</th><th>Status</th></tr></thead><tbody>` + recent.map(a => `
+          <tr>
+            <td data-label="Role">
+              <div class="role-cell">${escapeHtml(a.opening_title)}</div>
+              <div class="meta-cell">${a.id.substring(0, 8)}...</div>
+            </td>
+            <td data-label="Applied" class="text-muted text-sm">${new Date(a.applied_at).toLocaleDateString()}</td>
+            <td data-label="Score"><span class="score-pill ${scoreClass(a.total_score || 0)}">${Math.round(a.total_score || 0)}</span></td>
+            <td data-label="Status"><span class="badge ${a.status === 'shortlisted' ? 'success' : a.status === 'rejected' ? 'danger' : a.status === 'interviewing' || a.status === 'offered' ? 'warning' : 'info'}" style="text-transform:capitalize;padding:4px 10px;font-size:0.75rem;">${escapeHtml(a.status)}</span></td>
+          </tr>
+        `).join("") + `</tbody></table>`;
+
+        const statusCounts = {};
+        apps.forEach(a => { statusCounts[a.status] = (statusCounts[a.status] || 0) + 1; });
+        const breakdown = Object.entries(statusCounts).map(([k, v]) => `
+          <div class="flex items-center justify-between text-sm mb-1">
+            <span class="badge ${k === 'shortlisted' ? 'success' : k === 'rejected' ? 'danger' : k === 'interviewing' || k === 'offered' ? 'warning' : 'info'}" style="font-size:0.7rem;text-transform:capitalize;">${escapeHtml(k)}</span>
+            <strong>${v}</strong>
+          </div>
+        `).join("");
+        document.getElementById("statusBreakdown").innerHTML = breakdown ? `<p class="text-sm text-muted mb-2" style="font-weight:600;">By Status</p>` + breakdown : `<p class="text-sm text-muted">No applications yet.</p>`;
+      } catch (error) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Could not load dashboard</h3>
+            <p>${escapeHtml(error.message)}</p>
+          </div>`;
+        document.getElementById("statusBreakdown").innerHTML = `<p class="text-sm text-muted">Could not load status.</p>`;
+      }
+    }
+
+    document.getElementById("candidateLogoutBtn")?.addEventListener("click", logoutCandidate);
+
+    loadPortalBranding();
+    renderDashboard();
+  </script>
+    <script src="/ui/shared/app.js"></script>
+</body>
+</html>

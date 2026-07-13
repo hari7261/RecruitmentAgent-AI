@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriptions — Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/ui/shared.css">
+</head>
+
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header"><i class="fas fa-shield-alt" style="margin-right:8px;"></i> Platform Admin</div>
+      <nav class="sidebar-nav">
+        <a href="/ui/admin/index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="/ui/admin/organizations.html"><i class="fas fa-building"></i> Organizations</a>
+        <a href="/ui/admin/users.html"><i class="fas fa-users"></i> Users</a>
+        <a href="/ui/admin/subscriptions.html" class="active"><i class="fas fa-credit-card"></i> Subscriptions</a>
+        <a href="/ui/admin/settings.html"><i class="fas fa-cog"></i> Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="color:#fff;width:100%;justify-content:center;" onclick="logout()"><i
+            class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden"
+            onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Subscriptions</span>
+        </div>
+      </header>
+      <div class="page-body">
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Organization</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Resumes Used</th>
+                    <th>Users</th>
+                    <th>Next Billing</th>
+                  </tr>
+                </thead>
+                <tbody id="subsTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    const planBadge = p => ({ starter: "info", growth: "success", institute: "warning", enterprise: "gray" }[p] || "gray");
+    const getSubStatusBadgeClass = s => ({ active: "success", trialing: "info", past_due: "warning", suspended: "danger", canceled: "gray" }[s] || "gray");
+
+    async function loadSubscriptions() {
+      const user = await requireAuth(["super_admin"]);
+      if (!user) return;
+      try {
+        const res = await fetchWithAuth("/api/v1/admin/tenants/subscriptions");
+        if (res.ok) {
+          const subs = await res.json();
+          document.getElementById("subsTable").innerHTML = subs.map(s => `
+            <tr>
+              <td><strong>${escapeHtml(s.tenant_id || '—')}</strong></td>
+              <td><span class="badge ${planBadge(s.plan)}">${escapeHtml(s.plan)}</span></td>
+              <td><span class="badge ${getSubStatusBadgeClass(s.status)}">${escapeHtml(s.status)}</span></td>
+              <td>${s.resumes_used_this_period || 0} / ${s.resume_limit || 0}</td>
+              <td>${s.user_limit || '—'}</td>
+              <td class="text-muted text-sm">${s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—'}</td>
+            </tr>
+          `).join("");
+        }
+      } catch (e) { console.error("Subscriptions load error:", e); }
+    }
+
+    loadSubscriptions();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+# =============================================================================
+# Job Profile Configuration
+# =============================================================================
+# This file defines the ATS scoring criteria.
+# Edit this file to target different roles without touching any Python code.
+# =============================================================================
+
+# Job metadata (informational only)
+job_title: "Full Stack / Backend Software Engineer"
+job_level: "Mid-Senior"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+# required_skills: must-have normalized skill names (from skills_config.yaml)
+# preferred_skills: nice-to-have skills (score bonus but not mandatory)
+required_skills:
+  - python
+  - sql
+  - git
+  - rest
+
+preferred_skills:
+  - fastapi
+  - postgresql
+  - docker
+  - redis
+  - aws
+  - react
+  - typescript
+  - pytest
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+# min_experience_years: minimum required years of professional experience
+# preferred_experience_years: ideal years for full score
+min_experience_years: 2
+preferred_experience_years: 5
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+# preferred_education: normalized degree codes from education_map.yaml
+# Any one match = full education score
+preferred_education:
+  - btech
+  - mtech
+  - bsc
+  - msc
+  - mca
+  - phd
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+# required_certifications: normalized patterns to match extracted cert names
+# preferred_certifications: bonus certs
+required_certifications: []
+
+preferred_certifications:
+  - "aws"
+  - "azure"
+  - "google cloud"
+  - "kubernetes"
+  - "terraform"
+  - "python"
+  - "agile"
+  - "scrum"
+  - "pmp"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+# min_projects: minimum number of projects for partial score
+# preferred_projects: number of projects for full score
+min_projects: 1
+preferred_projects: 3

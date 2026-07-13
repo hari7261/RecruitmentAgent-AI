@@ -1,0 +1,46 @@
+# =============================================================================
+# Full Stack Developer Job Profile
+# =============================================================================
+job_title: "Full Stack Developer"
+job_level: "Mid-Senior"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+required_skills:
+  - python
+  - react
+  - sql
+  - git
+
+preferred_skills:
+  - javascript
+  - typescript
+  - fastapi
+  - nodejs
+  - postgresql
+  - docker
+  - aws
+  - redis
+  - html
+  - css
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+min_experience_years: 2
+preferred_experience_years: 5
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+preferred_education:
+  - btech
+  - mtech
+  - mca
+  - msc
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+required_certifications: []
+preferred_certifications:
+  - "aws"
+  - "full stack"
+  - "docker"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+min_projects: 2
+preferred_projects: 4

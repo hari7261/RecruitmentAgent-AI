@@ -1,0 +1,48 @@
+# =============================================================================
+# AI / ML Engineer Job Profile
+# =============================================================================
+job_title: "AI / Machine Learning Engineer"
+job_level: "Mid-Senior"
+
+# ── Skills (40% total weight) ─────────────────────────────────────────────────
+required_skills:
+  - python
+  - mysql
+  - react
+  - nextjs
+  - nodejs
+
+
+preferred_skills:
+  - numpy
+  - pandas
+  - scikit_learn
+  - sql
+  - git
+  - docker
+  - aws
+  - deep_learning
+  - natural_language_processing
+  - transformers
+
+# ── Experience (30% total weight) ─────────────────────────────────────────────
+min_experience_years: 1
+preferred_experience_years: 2
+
+# ── Education (10% total weight) ──────────────────────────────────────────────
+preferred_education:
+  - btech
+  - mtech
+  - msc
+  - phd
+
+# ── Certifications (10% total weight) ────────────────────────────────────────
+required_certifications: []
+preferred_certifications:
+  - "tensorflow"
+  - "aws certified machine learning"
+  - "deep learning"
+
+# ── Projects (10% total weight) ───────────────────────────────────────────────
+min_projects: 2
+preferred_projects: 4

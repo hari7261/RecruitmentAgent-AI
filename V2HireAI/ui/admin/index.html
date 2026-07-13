@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — AI Recruitment Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    .stats-grid {
+      display: grid;
+      gap: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <i class="fas fa-shield-alt" style="margin-right:8px;"></i> Platform Admin
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/ui/admin/index.html" class="active"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="/ui/admin/organizations.html"><i class="fas fa-building"></i> Organizations</a>
+        <a href="/ui/admin/users.html"><i class="fas fa-users"></i> Users</a>
+        <a href="/ui/admin/subscriptions.html"><i class="fas fa-credit-card"></i> Subscriptions</a>
+        <a href="/ui/admin/settings.html"><i class="fas fa-cog"></i> Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="color:#fff;width:100%;justify-content:center;" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden"
+            onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Platform Dashboard</span>
+        </div>
+        <div class="user-menu">
+          <span class="text-sm text-muted hidden md:inline">Super Admin</span>
+          <div class="avatar">SA</div>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <div class="stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div class="stat-card">
+            <div class="info">
+              <p>Total Organizations</p>
+              <h3 id="statTenants">0</h3>
+            </div>
+            <div class="icon blue"><i class="fas fa-building"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="info">
+              <p>Active Orgs</p>
+              <h3 id="statActive">0</h3>
+            </div>
+            <div class="icon green"><i class="fas fa-check-circle"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="info">
+              <p>Total Users</p>
+              <h3 id="statUsers">0</h3>
+            </div>
+            <div class="icon orange"><i class="fas fa-users"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="info">
+              <p>Total Applications</p>
+              <h3 id="statApps">0</h3>
+            </div>
+            <div class="icon red"><i class="fas fa-file-alt"></i></div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>Organizations</h3><button class="btn btn-primary btn-sm"
+              onclick="showToast('Use API: POST /api/v1/admin/tenants','info')"><i class="fas fa-plus"></i> New
+              Org</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Users</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="orgTable"></tbody>
+              </table>
+            </div>
+            <div id="orgEmpty" class="empty-state hidden"><i class="fas fa-building"></i>
+              <h3>No organizations yet</h3>
+              <p>Create your first org via the API.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    const planBadge = p => ({ starter: "info", growth: "success", institute: "warning", enterprise: "gray" }[p] || "gray");
+
+    async function loadDashboard() {
+      const user = await requireAuth(["super_admin"]);
+      if (!user) return;
+
+      try {
+        // Load analytics
+        const res = await fetchWithAuth("/api/v1/analytics/platform");
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("statTenants").textContent = data.total_tenants || 0;
+          document.getElementById("statActive").textContent = data.active_tenants || 0;
+          document.getElementById("statUsers").textContent = data.total_users || 0;
+          document.getElementById("statApps").textContent = data.total_applications || 0;
+        }
+      } catch (e) { console.error("Analytics load error:", e); }
+
+      try {
+        // Load organizations
+        const orgRes = await fetchWithAuth("/api/v1/admin/tenants");
+        if (orgRes.ok) {
+          const orgs = await orgRes.json();
+          const tbody = document.getElementById("orgTable");
+          const emptyEl = document.getElementById("orgEmpty");
+          if (orgs.length === 0) {
+            emptyEl.classList.remove("hidden");
+          } else {
+            emptyEl.classList.add("hidden");
+            tbody.innerHTML = orgs.map(o => `
+              <tr>
+                <td><strong>${escapeHtml(o.name)}</strong></td>
+                <td><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:0.8rem;">${escapeHtml(o.slug)}</code></td>
+                <td><span class="badge info">—</span></td>
+                <td><span class="badge ${o.is_active ? 'success' : 'danger'}">${o.is_active ? 'active' : 'inactive'}</span></td>
+                <td>—</td>
+                <td class="text-muted text-sm">${o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</td>
+              </tr>
+            `).join("");
+          }
+        }
+      } catch (e) { console.error("Orgs load error:", e); }
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    loadDashboard();
+  </script>
+</body>
+
+</html>

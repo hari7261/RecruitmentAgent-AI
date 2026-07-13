@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — AI Recruitment Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 24px; }
+    .login-card { background: #fff; border-radius: 16px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); max-width: 420px; width: 100%; padding: 40px; }
+    .login-card .logo-area { text-align: center; margin-bottom: 28px; }
+    .login-card .logo-area h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .login-card .logo-area p { color: var(--gray-500); font-size: 0.9rem; }
+    .login-card .tabs { display: flex; border-bottom: 1px solid var(--gray-200); margin-bottom: 20px; }
+    .login-card .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-weight: 500; color: var(--gray-500); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .login-card .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .login-card .form-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; font-size: 0.85rem; }
+    .login-card .demo-hint { background: var(--gray-100); border-radius: var(--radius); padding: 12px; margin-top: 20px; font-size: 0.8rem; color: var(--gray-600); }
+    .login-card .demo-hint strong { color: var(--gray-800); }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="logo-area">
+        <i class="fas fa-robot" style="font-size:2.5rem;color:var(--primary);"></i>
+        <h1>AI Recruitment Platform</h1>
+        <p>Sign in to your workspace</p>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="org" onclick="switchTab('org')">Organization</div>
+        <div class="tab" data-tab="admin" onclick="switchTab('admin')">Super Admin</div>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" id="email" placeholder="you@organization.com" required />
+        </div>
+        <div class="form-group">
+          <label>Password <span class="required">*</span></label>
+          <input type="password" id="password" placeholder="••••••••" required />
+        </div>
+        <div class="form-footer">
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+            <input type="checkbox" /> Remember me
+          </label>
+          <!-- L5 Fix: Wire up forgot password link to the reset endpoint -->
+          <a href="#" onclick="showForgotPassword(); return false;" style="font-size:0.85rem;">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary w-full mt-3" id="loginBtn">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <!-- S5a Fix: Removed hardcoded demo credentials for security.
+           For development, create a separate dev-only login or use env-based seed data. -->
+    </div>
+  </div>
+
+  <script>
+    let currentTab = "org";
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".login-card .tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.tab === tab);
+      });
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || data.error_code || "Login failed");
+        const meRes = await fetch("/api/v1/auth/me", { credentials: "include" });
+        const me = meRes.ok ? await meRes.json() : null;
+        showToast("Welcome back!", "success");
+        setTimeout(() => {
+          if ((me && me.role === "super_admin") || currentTab === "admin") window.location.href = "/ui/admin/index.html";
+          else window.location.href = "/ui/org/dashboard.html";
+        }, 600);
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      }
+    });
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showForgotPassword() {
+      const email = document.getElementById("email").value || prompt("Enter your email address:");
+      if (!email) return;
+      fetch("/api/v1/auth/password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).then(res => res.json())
+        .then(data => showToast("If the email exists, a reset link has been sent.", "info"))
+        .catch(() => showToast("Failed to request reset", "error"));
+    }
+  </script>
+    <script src="/ui/shared/app.js"></script>
+</body>
+</html>

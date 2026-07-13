@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Careers Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    :root {
+      --primary: #2563eb;
+    }
+    .portal-header {
+      background: #fff;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .portal-header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    .portal-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .portal-logo img {
+      max-height: 32px;
+      width: auto;
+    }
+    .portal-logo:hover { text-decoration: none; }
+    
+    .portal-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .portal-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+      color: #fff;
+      padding: 64px 0 48px;
+      text-align: center;
+    }
+    .portal-hero h1 { color: #fff; font-size: 2.25rem; margin-bottom: 8px; }
+    .portal-hero p { color: rgba(255,255,255,0.9); font-size: 1.05rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+    
+    .job-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 32px 0 64px;
+    }
+    @media (min-width: 768px) {
+      .job-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (min-width: 1024px) {
+      .job-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    
+    .job-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s, transform 0.15s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .job-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .job-card .job-title { font-size: 1.15rem; font-weight: 600; color: var(--gray-900); margin-bottom: 6px; }
+    .job-card .job-meta { color: var(--gray-500); font-size: 0.85rem; margin-bottom: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .job-card .job-desc { color: var(--gray-600); font-size: 0.9rem; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; flex-grow: 1; }
+    .job-card .job-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--gray-100); padding-top: 14px; margin-top: auto; }
+    
+    .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 32px; }
+    .search-box { position: relative; flex: 1; min-width: 240px; }
+    .search-box input { width: 100%; padding: 10px 12px 10px 38px; border: 1px solid var(--gray-300); border-radius: var(--radius); background: #fff; transition: border-color 0.15s; }
+    .search-box input:focus { border-color: var(--primary); outline: none; }
+    .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); }
+    .filter-bar select { padding: 10px 14px; border: 1px solid var(--gray-300); border-radius: var(--radius); background: #fff; cursor: pointer; min-width: 150px; }
+    .filter-bar select:focus { border-color: var(--primary); outline: none; }
+
+    .empty-state { text-align: center; padding: 64px 24px; color: var(--gray-500); }
+    .empty-state i { font-size: 3rem; margin-bottom: 16px; color: var(--gray-300); }
+    .empty-state h3 { color: var(--gray-800); margin-bottom: 8px; }
+
+    .error-msg { text-align: center; padding: 48px 24px; color: var(--danger); font-weight: 500; }
+
+    @media (max-width: 767px) {
+      .portal-header {
+        position: relative;
+      }
+      .portal-nav {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+        padding: 16px 24px;
+        box-shadow: var(--shadow-lg);
+        gap: 12px;
+        z-index: 101;
+      }
+      .portal-nav.open {
+        display: flex;
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        max-width: 100%;
+      }
+      .filter-bar select {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="portal-header">
+    <div class="container">
+      <div class="flex items-center gap-3">
+        <button id="mobileMenuBtn" class="btn btn-ghost md:hidden" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <a href="#" id="logoLink" class="portal-logo">
+          <i class="fas fa-building" id="defaultLogoIcon" style="color:var(--primary);"></i>
+          <span id="orgName">Organization</span>
+        </a>
+      </div>
+      <nav class="portal-nav" id="portalNav">
+        <a href="#" id="navJobs" class="btn btn-ghost text-sm">Openings</a>
+        <a href="#" id="navDashboard" class="btn btn-ghost text-sm">Dashboard</a>
+        <!-- B3 Fix: Add id="navApps" for the my-applications link -->
+        <a href="#" id="navApps" class="btn btn-ghost text-sm">My Applications</a>
+        <a href="/ui/auth/login.html" class="btn btn-primary btn-sm">For Employers</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="portal-hero">
+    <div class="container">
+      <h1>Join Our Team</h1>
+      <p>Explore career opportunities and apply directly. We review every application and match the best candidates with our roles.</p>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="filter-bar">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="search" id="searchInput" placeholder="Search openings by title or description..." />
+      </div>
+      <select id="deptFilter">
+        <option value="">All Departments</option>
+      </select>
+      <select id="typeFilter">
+        <option value="">All Types</option>
+        <option value="full-time">Full-time</option>
+        <option value="part-time">Part-time</option>
+        <option value="contract">Contract</option>
+        <option value="internship">Internship</option>
+      </select>
+    </div>
+    
+    <div id="jobsContainer" class="job-grid">
+      <div style="text-align:center;padding:48px 0;grid-column:1/-1;color:var(--gray-500);">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;margin-bottom:12px;"></i>
+        <p>Loading open positions...</p>
+      </div>
+    </div>
+    
+    <div id="emptyState" class="empty-state hidden">
+      <i class="fas fa-briefcase"></i>
+      <h3>No openings found</h3>
+      <p>Check back later for new opportunities.</p>
+    </div>
+  </main>
+
+  <footer style="background:#fff;border-top:1px solid var(--gray-200);padding:24px 0;text-align:center;color:var(--gray-500);font-size:0.85rem;margin-top:48px;">
+    <div class="container">&copy; <span id="year"></span> <span id="footerOrg">Organization</span>. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // Parse query params to get organization slug
+    const urlParams = new URLSearchParams(window.location.search);
+    let orgSlug = urlParams.get('org');
+    if (!orgSlug) {
+      const pathParts = window.location.pathname.split('/');
+      const oIndex = pathParts.indexOf('o');
+      if (oIndex !== -1 && pathParts[oIndex + 1]) {
+        orgSlug = pathParts[oIndex + 1];
+      }
+    }
+    if (!orgSlug) {
+      window.location.href = '/portal/list';
+      throw new Error('Organization slug is required');
+    }
+    
+    // Set up links dynamically
+    document.getElementById("logoLink").href = `/portal/o/${orgSlug}`;
+    document.getElementById("navJobs").href = `/portal/o/${orgSlug}`;
+    document.getElementById("navDashboard").href = `/portal/o/${orgSlug}/dashboard`;
+    // B3 Fix: Guard for missing navApps element
+    const navAppsEl = document.getElementById("navApps");
+    if (navAppsEl) {
+        navAppsEl.href = `/portal/o/${orgSlug}/my-applications`;
+    }
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const portalNav = document.getElementById("portalNav");
+    if (mobileMenuBtn && portalNav) {
+      mobileMenuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        portalNav.classList.toggle("open");
+      });
+      document.addEventListener("click", () => {
+        portalNav.classList.remove("open");
+      });
+    }
+
+    let allJobs = [];
+
+    const fmtSalary = (min, max, currency) => {
+      if (!min && !max) return "Competitive";
+      const symbol = currency === "USD" ? "$" : "₹";
+      const div = currency === "USD" ? 1000 : 100000;
+      const suf = currency === "USD" ? "K" : "L";
+      const fmt = n => symbol + (n/div).toFixed(1) + suf;
+      return `${fmt(min)} – ${fmt(max)}`;
+    };
+
+    const daysAgo = d => {
+      const diff = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+      return diff <= 0 ? "Today" : diff === 1 ? "1 day ago" : diff + " days ago";
+    };
+
+    const isSafeLogoUrl = value =>
+      typeof value === "string" && (value.startsWith("/") || /^https?:\/\//i.test(value));
+
+    function renderJobs(jobs) {
+      const container = document.getElementById("jobsContainer");
+      const empty = document.getElementById("emptyState");
+      if (!jobs.length) {
+        container.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+      container.innerHTML = jobs.map(j => `
+        <div class="job-card" onclick="window.location.href='/portal/o/${orgSlug}/apply/${j.slug || j.id}'">
+          <div class="job-title">${j.title}</div>
+          <div class="job-meta">
+            <span><i class="fas fa-map-marker-alt" style="width:14px;"></i>${j.location || "Remote"}</span>
+            <span><i class="fas fa-briefcase" style="width:14px;"></i>${j.employment_type || "Full-time"}</span>
+            <span><i class="fas fa-building" style="width:14px;"></i>${j.department || "General"}</span>
+            <span><i class="far fa-clock" style="width:14px;"></i>${daysAgo(j.published_at || j.created_at)}</span>
+          </div>
+          <div class="job-desc">${j.description || "No description provided."}</div>
+          <div class="job-footer">
+            <span class="text-muted text-sm" style="font-weight:600;">${fmtSalary(j.salary_min, j.salary_max, j.salary_currency)}</span>
+            <span class="badge success" style="display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-circle" style="font-size:6px;"></i>Active</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function loadPortalData() {
+      try {
+        const res = await fetch(`/portal/o/${orgSlug}?format=json`);
+        if (!res.ok) throw new Error("Failed to load organization careers details");
+        const data = await res.json();
+        
+        // Dynamically update org brandings
+        document.title = `Careers — ${data.organization.name}`;
+        document.getElementById("orgName").textContent = data.organization.name;
+        document.getElementById("footerOrg").textContent = data.organization.name;
+
+        if (isSafeLogoUrl(data.organization.logo_url)) {
+          const logoContainer = document.getElementById("logoLink");
+          logoContainer.innerHTML = `<img src="${data.organization.logo_url}" alt="${data.organization.name}" />`;
+        }
+        if (data.organization.primary_color) {
+          document.documentElement.style.setProperty('--primary', data.organization.primary_color);
+        }
+
+        allJobs = data.jobs || [];
+
+        // Build department options dynamically
+        const depts = [...new Set(allJobs.map(j => j.department).filter(Boolean))];
+        const deptFilter = document.getElementById("deptFilter");
+        depts.forEach(d => {
+          const opt = document.createElement("option");
+          opt.value = d;
+          opt.textContent = d;
+          deptFilter.appendChild(opt);
+        });
+
+        renderJobs(allJobs);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("jobsContainer").innerHTML = `
+          <div class="error-msg" style="grid-column: 1/-1;">
+            <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:12px;"></i>
+            <p>Failed to load vacancies for this organization portal.</p>
+          </div>`;
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterJobs);
+    document.getElementById("deptFilter").addEventListener("change", filterJobs);
+    document.getElementById("typeFilter").addEventListener("change", filterJobs);
+
+    function filterJobs() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const dept = document.getElementById("deptFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      
+      const filtered = allJobs.filter(j => {
+        const matchQ = !q || (j.title + " " + (j.description || "") + " " + (j.requirements || "")).toLowerCase().includes(q);
+        const matchDept = !dept || j.department === dept;
+        const matchType = !type || j.employment_type === type;
+        return matchQ && matchDept && matchType;
+      });
+      renderJobs(filtered);
+    }
+
+    loadPortalData();
+  </script>
+    <script src="/ui/shared/app.js"></script>
+</body>
+</html>

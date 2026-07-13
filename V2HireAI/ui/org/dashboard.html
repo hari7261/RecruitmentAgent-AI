@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Workspace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    /* ── reset & base ─────────────────────────── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f6f9fc;
+      color: #0b1a2b;
+      line-height: 1.5;
+    }
+
+    /* ── layout ────────────────────────────────── */
+    .sidebar-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* main */
+    .main-content {
+      flex: 1;
+      background: #f6f9fc;
+      min-width: 0;
+    }
+
+    .top-header {
+      background: #ffffff;
+      padding: 14px 28px;
+      border-bottom: 1px solid #e2ecf5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .top-header .page-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0b1a2b;
+    }
+
+    .top-header .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-header .user-menu .text-muted {
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1f3b54;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: 0.15s;
+      background: #fff;
+      color: #1e3347;
+      border-color: #d6e2ed;
+    }
+
+    .btn-primary {
+      background: #1f3b54;
+      color: #fff;
+      border-color: #1f3b54;
+    }
+    .btn-primary:hover { background: #0b2a42; }
+
+    .btn-outline {
+      background: transparent;
+      border-color: #d6e2ed;
+    }
+    .btn-outline:hover { background: #eef4fa; }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 0.78rem;
+    }
+    .btn-ghost {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .md-hidden { display: none; }
+
+    .page-body {
+      padding: 28px;
+    }
+
+    /* ── stats grid ───────────────────────────── */
+    .stats-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(4, 1fr);
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e2ecf5;
+      border-radius: 16px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .stat-card:hover {
+      border-color: #b6ccdd;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+      transform: translateY(-2px);
+    }
+
+    .stat-card .stat-info p {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin: 0 0 4px 0;
+    }
+
+    .stat-card .stat-info h3 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #0b1a2b;
+      letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .stat-card .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.green { background: #dcfce7; color: #16a34a; }
+    .stat-icon.orange { background: #fef3c7; color: #d97706; }
+    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+
+    /* ── dashboard grid ───────────────────────── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    /* ── cards ────────────────────────────────── */
+    .card {
+      background: #fff;
+      border: 1px solid #e2ecf5;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+
+    .card-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid #eef4fa;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
+
+    .card-header h3 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #0b1a2b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .card-header .pill {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .card-body { padding: 0; }
+
+    /* ── table ────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+
+    .premium-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .premium-table thead {
+      background: #f8fafc;
+    }
+
+    .premium-table th {
+      padding: 12px 22px;
+      text-align: left;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #e2ecf5;
+      white-space: nowrap;
+    }
+
+    .premium-table td {
+      padding: 14px 22px;
+      color: #1e3347;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+
+    .premium-table tbody tr:last-child td { border-bottom: none; }
+    .premium-table tbody tr { transition: 0.15s; }
+    .premium-table tbody tr:hover td { background: #f8fafc; }
+
+    .premium-table th:nth-child(1), .premium-table td:nth-child(1) { width: 24%; }
+    .premium-table th:nth-child(2), .premium-table td:nth-child(2) { width: 26%; }
+    .premium-table th:nth-child(3), .premium-table td:nth-child(3) { width: 12%; text-align: center; }
+    .premium-table th:nth-child(4), .premium-table td:nth-child(4) { width: 15%; text-align: center; }
+    .premium-table th:nth-child(5), .premium-table td:nth-child(5) { width: 13%; }
+    .premium-table th:nth-child(6), .premium-table td:nth-child(6) { width: 10%; text-align: right; }
+
+    .candidate-name { font-weight: 600; color: #0b1a2b; }
+    .candidate-email { font-size: 0.72rem; color: #7c9ab6; margin-top: 2px; }
+    .opening-title { color: #3d5b78; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 9999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: capitalize;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-info { background: #dbeafe; color: #1a4b8c; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-gray { background: #f1f5f9; color: #475569; }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      min-width: 42px;
+    }
+
+    .score-badge.strong { background: #dcfce7; color: #166534; }
+    .score-badge.hire { background: #dbeafe; color: #1d4ed8; }
+    .score-badge.review { background: #fefce8; color: #713f12; }
+    .score-badge.reject { background: #fee2e2; color: #991b1b; }
+
+    /* ── quick actions ────────────────────────── */
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 16px;
+    }
+
+    .quick-action {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: #fff;
+      border: 1px solid #e2ecf5;
+      border-radius: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .quick-action:hover {
+      border-color: #b6ccdd;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .quick-action .qa-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .qa-icon.blue { background: #dbeafe; color: #2563eb; }
+    .qa-icon.green { background: #dcfce7; color: #16a34a; }
+    .qa-icon.orange { background: #fef3c7; color: #d97706; }
+    .qa-icon.purple { background: #f3e8ff; color: #9333ea; }
+
+    .quick-action .qa-text strong {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #0b1a2b;
+      margin-bottom: 1px;
+    }
+
+    .quick-action .qa-text span {
+      font-size: 0.75rem;
+      color: #7c9ab6;
+    }
+
+    /* ── plan usage ───────────────────────────── */
+    .plan-usage {
+      padding: 16px 20px;
+    }
+
+    .usage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .usage-header span {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .usage-header strong {
+      font-size: 0.82rem;
+      color: #0b1a2b;
+    }
+
+    .usage-track {
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .usage-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #2563eb, #4f46e5);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .status-breakdown {
+      margin-top: 16px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.82rem;
+    }
+
+    .status-row .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #475569;
+    }
+
+    /* ── states ────────────────────────────────── */
+    .empty-state, .loading-state, .error-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #7c9ab6;
+    }
+
+    .empty-state i, .loading-state i, .error-state i {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .empty-state i { color: #b6ccdd; }
+    .loading-state i { color: #2563eb; }
+    .error-state i { color: #dc2626; }
+
+    .empty-state h4, .error-state h4 {
+      color: #1e3347;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+
+    .error-state p { color: #64748b; font-size: 0.85rem; margin: 0; }
+
+    /* ── toast ─────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 300;
+    }
+
+    .toast {
+      background: #0b1a2b;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      animation: slideUp 0.2s ease;
+    }
+
+    .toast.success { background: #0b6b4b; }
+    .toast.error { background: #b91c1c; }
+    .toast.warning { background: #a16207; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── responsive ───────────────────────────── */
+    @media (max-width: 1280px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .premium-table th:nth-child(5),
+      .premium-table td:nth-child(5),
+      .premium-table th:nth-child(6),
+      .premium-table td:nth-child(6) { display: none; }
+      .premium-table th:nth-child(1), .premium-table td:nth-child(1) { width: 28%; }
+      .premium-table th:nth-child(2), .premium-table td:nth-child(2) { width: 38%; }
+      .premium-table th:nth-child(3), .premium-table td:nth-child(3) { width: 14%; text-align: center; }
+      .premium-table th:nth-child(4), .premium-table td:nth-child(4) { width: 20%; text-align: center; }
+    }
+
+    @media (max-width: 767px) {
+      .sidebar {
+        transform: translateX(-280px);
+        position: fixed;
+        width: 280px;
+        height: 100vh;
+        top: 0;
+        left: 0;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .md-hidden { display: inline-flex; }
+      .top-header { padding: 12px 16px; }
+      .page-body { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .stat-card { padding: 16px 18px; }
+      .stat-card .stat-info h3 { font-size: 1.4rem; }
+      .stat-card .stat-icon { width: 40px; height: 40px; font-size: 1rem; }
+
+      .premium-table th, .premium-table td { padding: 10px 14px; font-size: 0.78rem; }
+      .premium-table th:nth-child(2),
+      .premium-table td:nth-child(2),
+      .premium-table th:nth-child(4),
+      .premium-table td:nth-child(4) { display: none; }
+      .premium-table th:nth-child(1), .premium-table td:nth-child(1) { width: 35%; }
+      .premium-table th:nth-child(3), .premium-table td:nth-child(3) { width: 30%; text-align: center; }
+      .premium-table th:nth-child(5), .premium-table td:nth-child(5) { width: 35%; text-align: right; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .premium-table th:nth-child(3),
+      .premium-table td:nth-child(3) { display: none; }
+      .premium-table th:nth-child(1), .premium-table td:nth-child(1) { width: 45%; }
+      .premium-table th:nth-child(5), .premium-table td:nth-child(5) { width: 55%; text-align: right; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-layout">
+    <div id="shared-sidebar-root"></div>
+    <script src="/ui/org/sidebar-loader.js" defer></script>
+
+    <!-- main -->
+    <main class="main-content">
+      <header class="top-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn btn-ghost md:hidden" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Dashboard</span>
+        </div>
+        <div class="user-menu">
+          <span class="text-muted" id="orgNameHeader">Loading…</span>
+          <div class="avatar" id="orgAvatar">—</div>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <p>Active Openings</p>
+              <h3 id="sOpenings">—</h3>
+            </div>
+            <div class="stat-icon blue"><i class="fas fa-briefcase"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <p>Total Applications</p>
+              <h3 id="sApps">—</h3>
+            </div>
+            <div class="stat-icon green"><i class="fas fa-file-alt"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <p>Shortlisted</p>
+              <h3 id="sShort">—</h3>
+            </div>
+            <div class="stat-icon orange"><i class="fas fa-star"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <p>Avg ATS Score</p>
+              <h3 id="sScore">—</h3>
+            </div>
+            <div class="stat-icon purple"><i class="fas fa-chart-line"></i></div>
+          </div>
+        </div>
+
+        <!-- dashboard grid -->
+        <div class="dashboard-grid">
+          <!-- recent apps -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Recent Applications <span class="pill" id="recentCount"></span></h3>
+              <a href="#" class="btn btn-outline btn-sm" style="border-radius:8px;">View All</a>
+            </div>
+            <div class="card-body">
+              <div id="loadingDash" class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading real data…</p>
+              </div>
+              <div id="errorDash" class="error-state" style="display:none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>Failed to load applications</h4>
+                <p id="errorMsg"></p>
+              </div>
+              <div id="noAppsMsg" class="empty-state" style="display:none;">
+                <i class="fas fa-inbox"></i>
+                <h4>No applications yet</h4>
+                <p>Share your <a href="#" id="emptyPortalLink" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-weight:600;">public careers portal</a> so candidates can apply and track applications.</p>
+              </div>
+              <div class="table-wrap" id="recentTableWrap" style="display:none;">
+                <table class="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Opening</th>
+                      <th style="text-align:center;">Score</th>
+                      <th style="text-align:center;">Status</th>
+                      <th>Applied</th>
+                      <th style="text-align:right;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- right panel -->
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-header"><h3>Quick Actions</h3></div>
+              <div class="quick-actions">
+                <a href="#" class="quick-action">
+                  <div class="qa-icon blue"><i class="fas fa-plus"></i></div>
+                  <div class="qa-text"><strong>New Opening</strong><span>Post a new job</span></div>
+                </a>
+                <a href="#" class="quick-action">
+                  <div class="qa-icon green"><i class="fas fa-sliders-h"></i></div>
+                  <div class="qa-text"><strong>ATS Profile</strong><span>Configure scoring</span></div>
+                </a>
+                <a href="#" class="quick-action">
+                  <div class="qa-icon orange"><i class="fas fa-user-plus"></i></div>
+                  <div class="qa-text"><strong>Invite Member</strong><span>Add to team</span></div>
+                </a>
+                <a href="#" target="_blank" class="quick-action" id="careersPortalLink">
+                  <div class="qa-icon purple"><i class="fas fa-external-link-alt"></i></div>
+                  <div class="qa-text"><strong>Candidate Portal</strong><span>Open the public apply and tracking portal</span></div>
+                </a>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Plan Usage</h3>
+                <span class="badge badge-info" id="usageBadge" style="font-size:0.7rem;padding:3px 10px;">—</span>
+              </div>
+              <div class="plan-usage">
+                <div class="usage-header">
+                  <span>Resumes this month</span>
+                  <strong id="usageText">— / — used</strong>
+                </div>
+                <div class="usage-track">
+                  <div class="usage-fill" id="usageBar" style="width:0%;"></div>
+                </div>
+                <div class="status-breakdown" id="statusBreakdown"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    const statusMap = {
+      applied: "info", shortlisted: "success", interviewing: "warning",
+      offered: "success", rejected: "danger", hired: "success", review: "warning"
+    };
+    const statusLabels = {
+      applied: "Applied", shortlisted: "Shortlisted", interviewing: "Interviewing",
+      offered: "Offered", rejected: "Rejected", hired: "Hired", review: "Review"
+    };
+
+    function scoreClass(s) {
+      if (s >= 80) return "strong";
+      if (s >= 65) return "hire";
+      if (s >= 50) return "review";
+      return "reject";
+    }
+
+    function timeAgo(iso) {
+      const d = new Date(iso), now = new Date();
+      const diff = Math.floor((now - d) / 1000);
+      if (diff < 60) return "just now";
+      if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+      if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+      return Math.floor(diff / 86400) + "d ago";
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showLoading(show) {
+      document.getElementById("loadingDash").style.display = show ? "block" : "none";
+    }
+    function showError(show, msg) {
+      document.getElementById("errorDash").style.display = show ? "block" : "none";
+      if (msg) document.getElementById("errorMsg").textContent = msg;
+    }
+    function showEmpty(show) {
+      document.getElementById("noAppsMsg").style.display = show ? "block" : "none";
+    }
+    function showTable(show) {
+      document.getElementById("recentTableWrap").style.display = show ? "block" : "none";
+    }
+
+    async function loadDashboard() {
+      const user = await requireAuth(["super_admin", "org_admin", "org_member"]);
+      if (!user) return;
+
+      try {
+        const [analyticsRes, appsRes, tenantRes] = await Promise.all([
+          fetchWithAuth("/api/v1/analytics/org"),
+          fetchWithAuth("/api/v1/applications/all"),
+          fetchWithAuth("/api/v1/users/tenant/me"),
+        ]);
+
+        if (analyticsRes.status === 401 || appsRes.status === 401) {
+          window.location.href = "/ui/auth/login.html"; return;
+        }
+
+        if (analyticsRes.ok) {
+          const an = await analyticsRes.json();
+          document.getElementById("sOpenings").textContent = an.active_openings ?? an.total_openings ?? "0";
+          document.getElementById("sApps").textContent = an.total_applications ?? "0";
+          document.getElementById("sShort").textContent = an.applications_by_status?.shortlisted || 0;
+
+          const byStatus = an.applications_by_status || {};
+          const breakdown = Object.entries(byStatus)
+            .filter(([, v]) => v > 0)
+            .map(([k, v]) => `
+              <div class="status-row">
+                <span class="status-label"><span class="badge badge-${statusMap[k] || 'gray'}" style="font-size:0.65rem;text-transform:capitalize;">${statusLabels[k] || k}</span></span>
+                <strong style="color:#0b1a2b;font-size:0.85rem;">${v}</strong>
+              </div>`).join("");
+          document.getElementById("statusBreakdown").innerHTML = breakdown
+            ? `<p style="font-size:0.7rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">By Status</p>` + breakdown
+            : `<p style="font-size:0.8rem;color:#7c9ab6;">No applications yet.</p>`;
+        } else {
+          document.getElementById("sOpenings").textContent = "0";
+          document.getElementById("sApps").textContent = "0";
+          document.getElementById("sShort").textContent = "0";
+        }
+
+        if (appsRes.ok) {
+          const apps = await appsRes.json();
+          showLoading(false);
+
+          if (!apps.length) {
+            showEmpty(true);
+            showTable(false);
+            document.getElementById("sScore").textContent = "N/A";
+          } else {
+            const avgScore = apps.reduce((a, b) => a + (b.total_score || 0), 0) / apps.length;
+            document.getElementById("sScore").textContent = avgScore.toFixed(1);
+            document.getElementById("recentCount").textContent = apps.length + " total";
+
+            const recent = apps.slice(0, 10);
+            document.getElementById("recentTable").innerHTML = recent.map(a => `
+              <tr>
+                <td>
+                  <div class="candidate-name">${escapeHtml(a.candidate_name || 'Anonymous')}</div>
+                  <div class="candidate-email">${escapeHtml(a.candidate_email || '')}</div>
+                </td>
+                <td class="opening-title">${escapeHtml(a.opening_title || 'Unknown')}</td>
+                <td style="text-align:center;"><span class="score-badge ${scoreClass(a.total_score)}">${a.total_score}</span></td>
+                <td style="text-align:center;"><span class="badge badge-${statusMap[a.status] || 'gray'}" style="font-size:0.7rem;text-transform:capitalize;">${statusLabels[a.status] || a.status}</span></td>
+                <td style="color:#64748b;font-size:0.8rem;">${timeAgo(a.applied_at)}</td>
+                <td style="text-align:right;">
+                  <a href="#" class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:0.75rem;color:#2563eb;">View</a>
+                </td>
+              </tr>
+            `).join("");
+            showEmpty(false);
+            showTable(true);
+          }
+        } else {
+          showLoading(false);
+          showError(true, "Status: " + appsRes.status);
+          showTable(false);
+        }
+
+        if (tenantRes.ok) {
+          const tenant = await tenantRes.json();
+          const portalHref = `/portal/o/${tenant.slug}`;
+          const careersPortalLink = document.getElementById("careersPortalLink");
+          if (careersPortalLink) careersPortalLink.href = portalHref;
+          const emptyPortalLink = document.getElementById("emptyPortalLink");
+          if (emptyPortalLink) emptyPortalLink.href = portalHref;
+        }
+
+        const meRes = await fetchWithAuth("/api/v1/auth/me");
+        if (meRes.ok) {
+          const me = await meRes.json();
+          const name = me.full_name || me.email || "User";
+          document.getElementById("orgNameHeader").textContent = name;
+          document.getElementById("orgAvatar").textContent = name.slice(0, 2).toUpperCase();
+        }
+
+      } catch (err) {
+        console.error("Dashboard error:", err);
+        showLoading(false);
+        showError(true, err.message);
+        showTable(false);
+      }
+    }
+
+    window.addEventListener("load", () => {
+      showToast("Dashboard updated — welcome back!", "success");
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>

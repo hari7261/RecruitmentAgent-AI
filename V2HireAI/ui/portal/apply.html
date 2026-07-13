@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apply — Job Opening</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    :root {
+      --primary: #2563eb;
+    }
+
+    .portal-header {
+      background: #fff;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .portal-header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .portal-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .portal-logo img {
+      max-height: 32px;
+      width: auto;
+    }
+
+    .portal-logo:hover {
+      text-decoration: none;
+    }
+
+    .portal-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .job-hero {
+      background: #fff;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 28px 0;
+      margin-bottom: 24px;
+    }
+
+    .job-hero h1 {
+      font-size: 1.65rem;
+      margin-top: 8px;
+      margin-bottom: 6px;
+    }
+
+    .job-meta-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      color: var(--gray-500);
+      font-size: 0.85rem;
+    }
+
+    .apply-layout {
+      display: grid;
+      gap: 24px;
+      padding-bottom: 64px;
+    }
+
+    @media (min-width: 1024px) {
+      .apply-layout {
+        grid-template-columns: 1.3fr 0.7fr;
+      }
+    }
+
+    .apply-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      height: fit-content;
+    }
+
+    .apply-card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--gray-100);
+      padding-bottom: 10px;
+      color: var(--gray-900);
+    }
+
+    .file-drop {
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .file-drop:hover,
+    .file-drop.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .file-drop i {
+      font-size: 2.25rem;
+      margin-bottom: 10px;
+      color: var(--gray-400);
+    }
+
+    .file-drop .file-name {
+      margin-top: 10px;
+      font-weight: 600;
+      color: var(--gray-800);
+      background: var(--gray-100);
+      padding: 6px 12px;
+      border-radius: 4px;
+      display: inline-block;
+      font-size: 0.85rem;
+    }
+
+    .required {
+      color: var(--danger);
+      margin-left: 2px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .helper-text {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-top: -4px;
+      margin-bottom: 16px;
+    }
+
+    .resume-status {
+      border-radius: 10px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      color: var(--gray-700);
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    .resume-status.success {
+      background: #ecfdf5;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+
+    .resume-status.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    /* Result styling */
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 32px 16px;
+    }
+
+    .result-score {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .score-excellent {
+      background: var(--success);
+    }
+
+    .score-good {
+      background: var(--warning);
+    }
+
+    .score-fail {
+      background: var(--danger);
+    }
+
+    .error-msg {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--danger);
+      font-weight: 500;
+    }
+
+    @media (max-width: 767px) {
+      .portal-header {
+        position: relative;
+      }
+
+      .portal-nav {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+        padding: 16px 24px;
+        box-shadow: var(--shadow-lg);
+        gap: 12px;
+        z-index: 101;
+      }
+
+      .portal-nav.open {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="portal-header">
+    <div class="container">
+      <div class="flex items-center gap-3">
+        <button id="mobileMenuBtn" class="btn btn-ghost md:hidden" aria-label="Toggle menu"><i
+            class="fas fa-bars"></i></button>
+        <a href="#" id="logoLink" class="portal-logo">
+          <i class="fas fa-building" id="defaultLogoIcon" style="color:var(--primary);"></i>
+          <span id="orgName">Organization</span>
+        </a>
+      </div>
+      <nav class="portal-nav" id="portalNav">
+        <a href="#" id="navJobs" class="btn btn-ghost text-sm">Openings</a>
+        <a href="#" id="navDashboard" class="btn btn-ghost text-sm">Dashboard</a>
+        <a href="#" id="navApps" class="btn btn-ghost text-sm">My Applications</a>
+        <button type="button" id="candidateLogoutBtn" class="btn btn-outline btn-sm hidden">Logout</button>
+        <a href="/ui/auth/login.html" class="btn btn-primary btn-sm">For Employers</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="job-hero">
+      <a href="#" id="backLink" style="color:var(--gray-500);font-size:0.85rem;"><i class="fas fa-arrow-left"></i> Back
+        to openings</a>
+      <h1 id="jobTitle">Opening Title</h1>
+      <div class="job-meta-row">
+        <span><i class="fas fa-map-marker-alt" style="width:14px;"></i><span id="jobLocation">Remote</span></span>
+        <span><i class="fas fa-briefcase" style="width:14px;"></i><span id="jobType">Full-time</span></span>
+        <span><i class="fas fa-building" style="width:14px;"></i><span id="jobDept">General</span></span>
+      </div>
+    </div>
+
+    <div class="apply-layout" id="mainLayout">
+      <div>
+        <div class="apply-card mb-4">
+          <h2>Job Description</h2>
+          <p id="jobDesc" style="color:var(--gray-600);font-size:0.95rem;line-height:1.6;white-space:pre-wrap;">
+            Loading...</p>
+        </div>
+        <div class="apply-card mb-4" id="reqsCard">
+          <h2>Requirements</h2>
+          <p id="jobReqs" style="color:var(--gray-600);font-size:0.95rem;line-height:1.6;white-space:pre-wrap;">
+            Loading...</p>
+        </div>
+        <div class="apply-card mb-4" id="respCard">
+          <h2>Responsibilities</h2>
+          <p id="jobResps" style="color:var(--gray-600);font-size:0.95rem;line-height:1.6;white-space:pre-wrap;">
+            Loading...</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="apply-card" id="formCard">
+          <h2>Apply for this role</h2>
+          <form id="applyForm">
+            <div class="step-badge"><span>Step 1</span><span>Upload resume</span></div>
+            <p class="helper-text">Start by uploading your resume. We’ll parse it and auto-fill your details from the resume before you submit.</p>
+            <div class="form-group">
+              <label>Resume <span class="required">*</span></label>
+              <div class="file-drop" id="fileDrop">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <div id="dropText">Drag & drop your resume here or click to browse</div>
+                <div class="text-sm text-muted">PDF or DOCX, max 10MB</div>
+                <div class="file-name hidden" id="fileName"></div>
+              </div>
+              <input type="file" id="resumeInput" accept=".pdf,.docx" style="display:none;" required />
+            </div>
+            <div id="resumeStatus" class="resume-status hidden"></div>
+            <button type="button" class="btn btn-outline w-full" id="processResumeBtn" disabled>
+              <i class="fas fa-magic" style="margin-right:6px;"></i> Upload Resume and Auto-Fill
+            </button>
+
+            <div id="detailsSection" class="hidden" style="margin-top:24px;">
+              <div class="step-badge"><span>Step 2</span><span>Review details</span></div>
+              <p class="helper-text">We filled these from your resume. Review and fix anything missing before you submit.</p>
+              <div class="form-group">
+                <label>Full Name <span class="required">*</span></label>
+                <input type="text" id="fullName" placeholder="John Doe" required />
+              </div>
+              <div class="form-group">
+                <label>Email <span class="required">*</span></label>
+                <input type="email" id="email" placeholder="john@example.com" required />
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="phone" placeholder="+1-555-0100" />
+              </div>
+              <div class="form-group">
+                <label>Cover Letter (optional)</label>
+                <textarea id="coverLetter" placeholder="Describe why you are a great fit for this vacancy..."
+                  rows="4"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-full" id="submitBtn">
+                <i class="fas fa-paper-plane" style="margin-right:6px;"></i> Submit Application
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="apply-card hidden" id="resultCard">
+          <h2>Application Results</h2>
+          <div class="result-container">
+            <div id="resultScoreCircle" class="result-score">0</div>
+            <h3 id="resultTitle" style="font-size:1.4rem;margin-bottom:6px;">Application Received</h3>
+            <p id="resultFeedback" style="color:var(--gray-600);font-size:0.95rem;margin-bottom:24px;line-height:1.5;">
+            </p>
+            <a href="#" id="resultBackBtn" class="btn btn-outline w-full">Back to Openings</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer
+    style="background:#fff;border-top:1px solid var(--gray-200);padding:24px 0;text-align:center;color:var(--gray-500);font-size:0.85rem;margin-top:48px;">
+    <div class="container">&copy; <span id="year"></span> <span id="footerOrg">Organization</span>. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let orgSlug = urlParams.get('org');
+    let jobSlug = urlParams.get('job');
+
+    const pathParts = window.location.pathname.split('/');
+    if (!orgSlug) {
+      const oIndex = pathParts.indexOf('o');
+      if (oIndex !== -1 && pathParts[oIndex + 1]) {
+        orgSlug = pathParts[oIndex + 1];
+      }
+    }
+    if (!orgSlug) {
+      window.location.href = '/portal/list';
+      throw new Error('Organization slug is required');
+    }
+
+    if (!jobSlug) {
+      const applyIndex = pathParts.indexOf('apply');
+      if (applyIndex !== -1 && pathParts[applyIndex + 1]) {
+        jobSlug = pathParts[applyIndex + 1];
+      }
+    }
+
+    if (!jobSlug) {
+      window.location.href = `/portal/o/${orgSlug}`;
+    }
+
+    document.getElementById("logoLink").href = `/portal/o/${orgSlug}`;
+    document.getElementById("navJobs").href = `/portal/o/${orgSlug}`;
+    document.getElementById("navDashboard").href = `/portal/o/${orgSlug}/dashboard`;
+    document.getElementById("navApps").href = `/portal/o/${orgSlug}/my-applications`;
+    document.getElementById("backLink").href = `/portal/o/${orgSlug}`;
+    document.getElementById("resultBackBtn").href = `/portal/o/${orgSlug}`;
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const portalNav = document.getElementById("portalNav");
+    if (mobileMenuBtn && portalNav) {
+      mobileMenuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        portalNav.classList.toggle("open");
+      });
+      document.addEventListener("click", () => {
+        portalNav.classList.remove("open");
+      });
+    }
+
+    async function getPortalSessionUser() {
+      const res = await fetch('/api/v1/public/me', { credentials: 'include' });
+      if (!res.ok) {
+        return null;
+      }
+      return await res.json();
+    }
+
+    async function syncCandidateNav() {
+      const currentUser = await getPortalSessionUser();
+      const logoutBtn = document.getElementById("candidateLogoutBtn");
+      if (!logoutBtn) return currentUser;
+      logoutBtn.classList.toggle("hidden", !(currentUser && currentUser.role === "candidate"));
+      return currentUser;
+    }
+
+    async function logoutCandidate() {
+      try {
+        await fetch('/api/v1/public/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } finally {
+        window.location.href = `/portal/o/${orgSlug}`;
+      }
+    }
+
+    // File Drag & Drop
+    const fileDrop = document.getElementById("fileDrop");
+    const resumeInput = document.getElementById("resumeInput");
+    const fileName = document.getElementById("fileName");
+    const dropText = document.getElementById("dropText");
+    const processResumeBtn = document.getElementById("processResumeBtn");
+    const detailsSection = document.getElementById("detailsSection");
+    const resumeStatus = document.getElementById("resumeStatus");
+    let resumeFile = null;
+    let resumeParsed = false;
+
+    fileDrop.addEventListener("click", () => resumeInput.click());
+    fileDrop.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      fileDrop.classList.add("dragover");
+    });
+    fileDrop.addEventListener("dragleave", () => fileDrop.classList.remove("dragover"));
+    fileDrop.addEventListener("drop", (e) => {
+      e.preventDefault();
+      fileDrop.classList.remove("dragover");
+      if (e.dataTransfer.files.length) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+    resumeInput.addEventListener("change", () => {
+      if (resumeInput.files.length) {
+        handleFile(resumeInput.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'pdf' && ext !== 'docx') {
+        alert("Only PDF and DOCX files are allowed!");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size exceeds the 10MB limit!");
+        return;
+      }
+      resumeFile = file;
+      resumeParsed = false;
+      fileName.textContent = file.name;
+      fileName.classList.remove("hidden");
+      dropText.textContent = "Replace file:";
+      processResumeBtn.disabled = false;
+      detailsSection.classList.add("hidden");
+      setResumeStatus("Resume selected. Upload it to extract your details.", "");
+    }
+
+    function setResumeStatus(message, tone) {
+      resumeStatus.textContent = message;
+      resumeStatus.className = "resume-status";
+      if (!message) {
+        resumeStatus.classList.add("hidden");
+        return;
+      }
+      resumeStatus.classList.remove("hidden");
+      if (tone) {
+        resumeStatus.classList.add(tone);
+      }
+    }
+
+    async function processResumeForAutofill() {
+      if (!resumeFile) {
+        alert("Please upload a resume first.");
+        return;
+      }
+
+      processResumeBtn.disabled = true;
+      processResumeBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i> Processing Resume...`;
+      setResumeStatus("Reading your resume and extracting contact details...", "");
+
+      const formData = new FormData();
+      formData.append("resume", resumeFile);
+
+      try {
+        const res = await fetch(`/portal/o/${orgSlug}/apply/${jobSlug}/preview`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          let errData = {};
+          try {
+            errData = await res.json();
+          } catch {
+            errData = {};
+          }
+          const detailMessage =
+            typeof errData.detail === "string"
+              ? errData.detail
+              : errData.details?.error || errData.details?.file || errData.message;
+          throw new Error(detailMessage || "Failed to process resume");
+        }
+
+        const data = await res.json();
+        const candidate = data.candidate || {};
+
+        document.getElementById("fullName").value = candidate.full_name || "";
+        document.getElementById("email").value = candidate.email || "";
+        document.getElementById("phone").value = candidate.phone || "";
+
+        resumeParsed = true;
+        detailsSection.classList.remove("hidden");
+        setResumeStatus(`Resume processed successfully using ${data.parse_source}. Review the pre-filled details below.`, "success");
+        processResumeBtn.innerHTML = `<i class="fas fa-rotate-right" style="margin-right:6px;"></i> Reprocess Resume`;
+        processResumeBtn.disabled = false;
+
+        const firstMissingField = ["fullName", "email", "phone"]
+          .map(id => document.getElementById(id))
+          .find(input => !input.value.trim());
+        (firstMissingField || document.getElementById("fullName")).focus();
+      } catch (err) {
+        resumeParsed = false;
+        detailsSection.classList.add("hidden");
+        setResumeStatus("We couldn't read enough contact details from that resume. Please try another file or upload again.", "error");
+        processResumeBtn.innerHTML = `<i class="fas fa-magic" style="margin-right:6px;"></i> Upload Resume and Auto-Fill`;
+        processResumeBtn.disabled = false;
+        alert("Error processing resume: " + err.message);
+      }
+    }
+
+    processResumeBtn.addEventListener("click", processResumeForAutofill);
+
+    const isSafeLogoUrl = value =>
+      typeof value === "string" && (value.startsWith("/") || /^https?:\/\//i.test(value));
+
+    let currentJob = null;
+
+    async function loadJobDetails() {
+      try {
+        // 1. Fetch organization branding
+        const orgRes = await fetch(`/portal/o/${orgSlug}?format=json`);
+        if (!orgRes.ok) throw new Error("Failed to load organization details");
+        const orgData = await orgRes.json();
+
+        // Apply branding
+        document.getElementById("orgName").textContent = orgData.organization.name;
+        document.getElementById("footerOrg").textContent = orgData.organization.name;
+
+        if (isSafeLogoUrl(orgData.organization.logo_url)) {
+          document.getElementById("logoLink").innerHTML = `<img src="${orgData.organization.logo_url}" alt="${orgData.organization.name}" />`;
+        }
+        if (orgData.organization.primary_color) {
+          document.documentElement.style.setProperty('--primary', orgData.organization.primary_color);
+        }
+
+        // 2. Fetch job details
+        const jobRes = await fetch(`/portal/o/${orgSlug}/job/${jobSlug}`);
+        if (!jobRes.ok) throw new Error("Failed to load opening details");
+        const jobData = await jobRes.json();
+
+        currentJob = jobData;
+
+        // Apply details
+        document.title = `${currentJob.title} — Apply`;
+        document.getElementById("jobTitle").textContent = currentJob.title;
+        document.getElementById("jobLocation").textContent = currentJob.location || "Remote";
+        document.getElementById("jobType").textContent = currentJob.employment_type || "Full-time";
+        document.getElementById("jobDept").textContent = currentJob.department || "General";
+        document.getElementById("jobDesc").textContent = currentJob.description || "No description provided.";
+
+        if (currentJob.requirements) {
+          document.getElementById("jobReqs").textContent = currentJob.requirements;
+          document.getElementById("reqsCard").classList.remove("hidden");
+        } else {
+          document.getElementById("reqsCard").classList.add("hidden");
+        }
+
+        if (currentJob.responsibilities) {
+          document.getElementById("jobResps").textContent = currentJob.responsibilities;
+          document.getElementById("respCard").classList.remove("hidden");
+        } else {
+          document.getElementById("respCard").classList.add("hidden");
+        }
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("mainLayout").innerHTML = `
+          <div class="error-msg" style="grid-column: 1/-1;">
+            <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:12px;"></i>
+            <p>Failed to load details for this job opening.</p>
+          </div>`;
+      }
+    }
+
+    // Submit Application
+    const applyForm = document.getElementById("applyForm");
+    const submitBtn = document.getElementById("submitBtn");
+
+    applyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!resumeFile) {
+        alert("Please upload a resume file to apply!");
+        return;
+      }
+      if (!resumeParsed) {
+        alert("Please process your resume first so we can auto-fill your application details.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i> Submitting...`;
+
+      const formData = new FormData();
+      formData.append("resume", resumeFile);
+      formData.append("full_name", document.getElementById("fullName").value);
+      formData.append("email", document.getElementById("email").value);
+      formData.append("phone", document.getElementById("phone").value || "");
+      formData.append("cover_letter", document.getElementById("coverLetter").value || "");
+
+      try {
+        const res = await fetch(`/portal/o/${orgSlug}/apply/${jobSlug}`, {
+          method: "POST",
+          credentials: "include",
+          body: formData
+        });
+
+        if (!res.ok) {
+          let errData = {};
+          try {
+            errData = await res.json();
+          } catch {
+            errData = {};
+          }
+          const detailMessage =
+            typeof errData.detail === "string"
+              ? errData.detail
+              : errData.details?.error || errData.details?.file || errData.message;
+          throw new Error(detailMessage || "Failed to submit application");
+        }
+
+        const data = await res.json();
+
+        if (data.candidate_set_password_required) {
+          const nextUrl = `/portal/o/${orgSlug}/dashboard`;
+          window.location.href = `/portal/o/${orgSlug}/set-password?next=${encodeURIComponent(nextUrl)}&application_id=${encodeURIComponent(data.application_id || '')}`;
+          return;
+        }
+
+        // Display results
+        document.getElementById("formCard").classList.add("hidden");
+        const resCard = document.getElementById("resultCard");
+        resCard.classList.remove("hidden");
+
+        const scoreCircle = document.getElementById("resultScoreCircle");
+        scoreCircle.textContent = Math.round(data.total_score);
+
+        if (data.total_score >= 80) {
+          scoreCircle.className = "result-score score-excellent";
+          document.getElementById("resultTitle").textContent = "Strong Application Match!";
+          document.getElementById("resultFeedback").textContent = `Thank you, ${document.getElementById("fullName").value}! Your application has been successfully parsed and evaluated by our AI screener. Your profile matches our criteria exceptionally well. Our recruitment team will contact you shortly!`;
+        } else if (data.total_score >= 60) {
+          scoreCircle.className = "result-score score-good";
+          document.getElementById("resultTitle").textContent = "Application Submitted!";
+          document.getElementById("resultFeedback").textContent = `Thank you, ${document.getElementById("fullName").value}! Your resume was successfully uploaded and evaluated. Your credentials are under review by our hiring team. We'll update you as soon as there's news!`;
+        } else {
+          scoreCircle.className = "result-score score-fail";
+          document.getElementById("resultTitle").textContent = "Application Under Review";
+          document.getElementById("resultFeedback").textContent = `Thank you for your interest! Your resume has been uploaded successfully. While our automated screening score is below the primary benchmark, our recruiters manually evaluate all incoming applications to see if there is a potential fit.`;
+        }
+
+        if (data.candidate_portal_ready && !data.candidate_login_required) {
+          document.getElementById("resultFeedback").textContent += " You can now track this application from the candidate dashboard in this browser.";
+        } else if (data.candidate_login_required) {
+          document.getElementById("resultFeedback").innerHTML += ` This email already has a candidate account, so please <a href="/portal/o/${orgSlug}/candidate-login?next=${encodeURIComponent(`/portal/o/${orgSlug}/dashboard`)}">sign in here</a> to view all your applications.`;
+        }
+
+        // Scroll to top of results card
+        resCard.scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        alert("Error submitting application: " + err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fas fa-paper-plane" style="margin-right:6px;"></i> Submit Application`;
+      }
+    });
+
+    document.getElementById("candidateLogoutBtn")?.addEventListener("click", logoutCandidate);
+
+    syncCandidateNav();
+    loadJobDetails();
+  </script>
+    <script src="/ui/shared/app.js"></script>
+</body>
+
+</html>

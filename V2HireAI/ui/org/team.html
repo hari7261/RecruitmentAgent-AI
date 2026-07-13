@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team — Workspace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+</head>
+<body>
+  <div class="sidebar-layout">
+    <div id="shared-sidebar-root"></div>
+    <script src="/ui/org/sidebar-loader.js" defer></script>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Team Members</span>
+        </div>
+        <div class="user-menu">
+          <button class="btn btn-primary btn-sm" onclick="openModal('inviteModal')"><i class="fas fa-user-plus"></i> Invite</button>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Active</th><th>Actions</th></tr></thead>
+                <tbody id="teamTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="inviteModal">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h2>Invite Team Member</h2>
+        <button class="modal-close" onclick="closeModal('inviteModal')">&times;</button>
+      </div>
+      <form id="inviteForm" class="modal-body">
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" name="email" placeholder="colleague@company.com" required />
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="full_name" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label>Password <span class="required">*</span> <span class="text-muted" style="font-size:0.8rem;">(min 10 characters)</span></label>
+          <input type="text" name="password" placeholder="e.g. MemberPassword123" required />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select name="role"><option value="org_member">Member</option><option value="org_admin">Admin</option></select>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('inviteModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="inviteUser()"><i class="fas fa-paper-plane"></i> Add Member</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    let team = [];
+    const roleBadge = r => ({ org_admin: "warning", org_member: "info", super_admin: "gray" }[r] || "gray");
+    const roleLabel = r => ({ org_admin: "Admin", org_member: "Member", super_admin: "Super Admin" }[r] || r);
+
+    function renderTeam() {
+      const tbody = document.getElementById("teamTable");
+      if (team.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No team members found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = team.map(u => `
+        <tr>
+          <td><strong>${escapeHtml(u.full_name || '—')}</strong></td>
+          <td class="text-muted text-sm">${escapeHtml(u.email)}</td>
+          <td><span class="badge ${roleBadge(u.role)}">${roleLabel(u.role)}</span></td>
+          <td><span class="badge ${u.is_active ? 'success' : 'gray'}">${u.is_active ? 'active' : 'inactive'}</span></td>
+          <td class="text-muted text-sm">${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '—'}</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-ghost btn-xs" onclick="showToast('Edit via API PATCH /api/v1/users/${u.id}/role','info')"><i class="fas fa-edit"></i></button>
+              ${u.role !== "org_admin" ? `<button class="btn btn-ghost btn-xs" onclick="removeUser('${u.id}')"><i class="fas fa-trash" style="color:var(--danger);"></i></button>` : ""}
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add("open"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+    async function loadTeam() {
+      try {
+        const res = await fetchWithAuth("/api/v1/users");
+        if (res.ok) {
+          team = await res.json();
+          renderTeam();
+        } else {
+          showToast("Failed to load team members", "error");
+        }
+      } catch (e) {
+        console.error("Failed to load team:", e);
+      }
+    }
+
+    async function inviteUser() {
+      const form = document.getElementById("inviteForm");
+      const data = Object.fromEntries(new FormData(form));
+      if (!data.email || !data.password) { showToast("Email and Password are required", "error"); return; }
+      
+      const payload = {
+        email: data.email,
+        password: data.password,
+        role: data.role || "org_member",
+        full_name: data.full_name || null
+      };
+
+      try {
+        const res = await fetchWithAuth("/api/v1/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          showToast(`Team member ${data.email} added successfully!`, "success");
+          closeModal("inviteModal");
+          form.reset();
+          await loadTeam();
+        } else {
+          let errMsg = "Failed to add member";
+          if (result.detail) {
+            if (Array.isArray(result.detail)) {
+              errMsg = result.detail.map(d => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(", ");
+            } else {
+              errMsg = result.detail;
+            }
+          } else if (result.message) {
+            errMsg = result.message;
+          }
+          showToast(errMsg, "error");
+        }
+      } catch (e) {
+        console.error("Invite member error:", e);
+        showToast("Error adding team member", "error");
+      }
+    }
+
+    async function removeUser(id) {
+      if (!confirm("Remove this user?")) return;
+      try {
+        const res = await fetchWithAuth(`/api/v1/users/${id}`, {
+          method: "DELETE"
+        });
+        if (res.ok) {
+          showToast("User removed", "warning");
+          await loadTeam();
+        } else {
+          showToast("Failed to remove user", "error");
+        }
+      } catch (e) {
+        console.error("Remove user error:", e);
+        showToast("Error removing user", "error");
+      }
+    }
+
+    async function init() {
+      const user = await requireAuth(["super_admin", "org_admin", "org_member"]);
+      if (user) {
+        await loadTeam();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

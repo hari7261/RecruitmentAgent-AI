@@ -1,0 +1,379 @@
+# =============================================================================
+# Master Skills Dictionary
+# =============================================================================
+# Each top-level key is the NORMALIZED skill name (used in DB and scoring).
+# aliases: list of alternate spellings/casings that map to this skill.
+# =============================================================================
+
+# ── Programming Languages ─────────────────────────────────────────────────────
+python:
+  aliases: ["python3", "py", "python 3", "python2"]
+
+javascript:
+  aliases: ["js", "java script", "javascript es6", "es6", "es2015", "ecmascript"]
+
+typescript:
+  aliases: ["ts", "type script"]
+
+java:
+  aliases: ["java8", "java 8", "java11", "java 11", "java17", "java 17"]
+
+csharp:
+  aliases: ["c#", "c sharp", "dotnet", ".net", "asp.net", "asp net"]
+
+cpp:
+  aliases: ["c++", "cplusplus", "c plus plus"]
+
+c:
+  aliases: ["c language", "ansi c"]
+
+go:
+  aliases: ["golang", "go lang"]
+
+rust:
+  aliases: ["rust lang"]
+
+kotlin:
+  aliases: []
+
+swift:
+  aliases: []
+
+ruby:
+  aliases: ["ruby on rails", "rails", "ror"]
+
+php:
+  aliases: ["php7", "php8", "php 7", "php 8"]
+
+scala:
+  aliases: []
+
+r:
+  aliases: ["r programming", "r language", "r studio", "rstudio"]
+
+matlab:
+  aliases: []
+
+perl:
+  aliases: []
+
+# ── Web Frameworks ────────────────────────────────────────────────────────────
+react:
+  aliases: ["reactjs", "react.js", "react js", "react native"]
+
+angular:
+  aliases: ["angularjs", "angular.js", "angular js", "angular 2", "angular2+"]
+
+vuejs:
+  aliases: ["vue", "vue.js", "vue js", "vuejs 3", "vue 3"]
+
+nextjs:
+  aliases: ["next.js", "next js", "nextjs 13", "nextjs 14"]
+
+nodejs:
+  aliases: ["node", "node.js", "node js", "node.js runtime"]
+
+expressjs:
+  aliases: ["express", "express.js", "express js"]
+
+fastapi:
+  aliases: ["fast api"]
+
+django:
+  aliases: ["django rest framework", "drf"]
+
+flask:
+  aliases: []
+
+springboot:
+  aliases: ["spring boot", "spring", "spring framework", "spring mvc"]
+
+laravel:
+  aliases: []
+
+nestjs:
+  aliases: ["nest.js", "nest js"]
+
+# ── Databases ─────────────────────────────────────────────────────────────────
+sql:
+  aliases: ["structured query language"]
+
+mysql:
+  aliases: ["my sql"]
+
+postgresql:
+  aliases: ["postgres", "psql", "pg", "postgre sql"]
+
+sqlite:
+  aliases: ["sqlite3"]
+
+mongodb:
+  aliases: ["mongo", "mongo db"]
+
+redis:
+  aliases: []
+
+elasticsearch:
+  aliases: ["elastic search"]
+
+cassandra:
+  aliases: ["apache cassandra"]
+
+dynamodb:
+  aliases: ["dynamo db", "aws dynamodb"]
+
+oracle:
+  aliases: ["oracle db", "oracle database", "oracle sql"]
+
+mssql:
+  aliases: ["sql server", "microsoft sql server", "ms sql", "t-sql", "tsql"]
+
+neo4j:
+  aliases: ["neo4j graph db"]
+
+# ── Cloud Platforms ───────────────────────────────────────────────────────────
+aws:
+  aliases: ["amazon web services", "amazon aws"]
+
+azure:
+  aliases: ["microsoft azure", "ms azure"]
+
+gcp:
+  aliases: ["google cloud", "google cloud platform", "google cloud services"]
+
+# ── DevOps / Infra ────────────────────────────────────────────────────────────
+docker:
+  aliases: ["docker container", "dockerfile"]
+
+kubernetes:
+  aliases: ["k8s", "kube", "kubectl"]
+
+terraform:
+  aliases: ["hashicorp terraform"]
+
+ansible:
+  aliases: []
+
+jenkins:
+  aliases: []
+
+github_actions:
+  aliases: ["github actions", "gh actions"]
+
+gitlab_ci:
+  aliases: ["gitlab ci/cd", "gitlab ci cd", "gitlab pipelines"]
+
+circleci:
+  aliases: ["circle ci"]
+
+nginx:
+  aliases: []
+
+apache:
+  aliases: ["apache httpd", "apache server"]
+
+linux:
+  aliases: ["ubuntu", "centos", "debian", "rhel", "red hat", "bash", "shell scripting"]
+
+# ── Data Science / ML ─────────────────────────────────────────────────────────
+pandas:
+  aliases: []
+
+numpy:
+  aliases: []
+
+scikit_learn:
+  aliases: ["scikit learn", "sklearn", "scikit-learn"]
+
+tensorflow:
+  aliases: ["tensorflow 2"]
+
+pytorch:
+  aliases: ["torch"]
+
+keras:
+  aliases: []
+
+matplotlib:
+  aliases: []
+
+seaborn:
+  aliases: []
+
+spark:
+  aliases: ["apache spark", "pyspark"]
+
+hadoop:
+  aliases: ["apache hadoop"]
+
+airflow:
+  aliases: ["apache airflow"]
+
+tableau:
+  aliases: []
+
+powerbi:
+  aliases: ["power bi", "ms power bi"]
+
+# ── Version Control ───────────────────────────────────────────────────────────
+git:
+  aliases: ["git version control", "git hub", "github", "gitlab", "bitbucket"]
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest:
+  aliases: ["py.test"]
+
+junit:
+  aliases: ["junit 5", "junit5"]
+
+jest:
+  aliases: []
+
+selenium:
+  aliases: []
+
+cypress:
+  aliases: []
+
+# ── Messaging / Queues ────────────────────────────────────────────────────────
+kafka:
+  aliases: ["apache kafka"]
+
+rabbitmq:
+  aliases: ["rabbit mq"]
+
+celery:
+  aliases: []
+
+# ── APIs / Protocols ──────────────────────────────────────────────────────────
+rest:
+  aliases: ["restful", "rest api", "restful api", "rest apis"]
+
+graphql:
+  aliases: ["graph ql"]
+
+grpc:
+  aliases: ["grpc api", "protocol buffers", "protobuf"]
+
+# ── Security ─────────────────────────────────────────────────────────────────
+jwt:
+  aliases: ["json web token", "json web tokens"]
+
+oauth:
+  aliases: ["oauth2", "oauth 2", "openid connect", "oidc"]
+
+ssl:
+  aliases: ["tls", "ssl/tls", "https"]
+
+# ── Other Tools ───────────────────────────────────────────────────────────────
+jira:
+  aliases: ["atlassian jira"]
+
+confluence:
+  aliases: []
+
+agile:
+  aliases: ["scrum", "kanban", "sprint", "agile methodology"]
+
+microservices:
+  aliases: ["micro services", "micro-services"]
+
+design_patterns:
+  aliases: ["design pattern", "solid principles", "solid", "oop"]
+
+ci_cd:
+  aliases: ["ci/cd", "continuous integration", "continuous deployment", "continuous delivery"]
+
+# ── AI / ML / Data Science ──────────────────────────────────────────────────
+machine_learning:
+  aliases: ["machine learning", "ml", "statistical learning", "predictive modeling"]
+
+deep_learning:
+  aliases: ["deep learning", "dl", "neural networks", "neural net", "dnn", "ann"]
+
+natural_language_processing:
+  aliases: ["natural language processing", "nlp", "text mining", "text analytics", "sentiment analysis"]
+
+transformers:
+  aliases: ["transformers", "bert", "gpt", "llm", "large language models", "attention mechanism"]
+
+# ── Business, Management, & Product ──────────────────────────────────────────
+communication:
+  aliases: ["communication", "communications", "written communication", "verbal communication", "interpersonal communication"]
+
+negotiation:
+  aliases: ["negotiation", "negotiations", "bargaining", "contract negotiation"]
+
+leadership:
+  aliases: ["leadership", "team leadership", "mentoring", "coaching"]
+
+project_management:
+  aliases: ["project management", "pm", "project coordination", "project planning", "milestones"]
+
+product_strategy:
+  aliases: ["product strategy", "product roadmap", "market analysis", "competitive analysis"]
+
+roadmap:
+  aliases: ["roadmap", "product roadmap", "roadmapping"]
+
+scrum:
+  aliases: ["scrum", "scrum master", "certified scrum master", "csm", "sprints"]
+
+presentation:
+  aliases: ["presentation", "presentations", "presenting", "slides", "slide deck"]
+
+stakeholder_management:
+  aliases: ["stakeholder management", "stakeholder relations", "client relations"]
+
+analytical_thinking:
+  aliases: ["analytical thinking", "critical thinking", "problem solving", "analytical skills"]
+
+# ── Sales & Marketing ────────────────────────────────────────────────────────
+sales:
+  aliases: ["sales", "selling", "b2b sales", "b2c sales", "sales pipeline", "account management"]
+
+business_development:
+  aliases: ["business development", "bizdev", "partnerships", "outreach"]
+
+crm:
+  aliases: ["crm", "customer relationship management", "salesforce", "hubspot"]
+
+lead_generation:
+  aliases: ["lead generation", "lead gen", "prospecting"]
+
+excel:
+  aliases: ["excel", "ms excel", "microsoft excel", "spreadsheets"]
+
+marketing:
+  aliases: ["marketing", "digital marketing", "seo", "sem", "branding"]
+
+public_speaking:
+  aliases: ["public speaking", "speaking", "keynote", "oratory"]
+
+# ── Customer Support ─────────────────────────────────────────────────────────
+customer_service:
+  aliases: ["customer service", "customer support", "client support", "customer care"]
+
+active_listening:
+  aliases: ["active listening", "listening skills", "listening"]
+
+problem_solving:
+  aliases: ["problem solving", "troubleshooting", "resolving issues"]
+
+zendesk:
+  aliases: ["zendesk", "freshdesk", "intercom", "helpdesk"]
+
+chat_support:
+  aliases: ["chat support", "live chat", "messaging support"]
+
+ticket_management:
+  aliases: ["ticket management", "ticketing", "service desk", "incident management"]
+
+email_communication:
+  aliases: ["email communication", "email support", "written correspondence"]
+
+empathy:
+  aliases: ["empathy", "empathetic", "compassion"]
+
+multi_tasking:
+  aliases: ["multi-tasking", "multitasking", "prioritization", "task management"]

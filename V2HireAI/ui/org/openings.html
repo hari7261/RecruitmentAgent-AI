@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Openings — Workspace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/ui/shared.css" />
+  <style>
+    #loadingOpenings { text-align:center; padding:60px; color:var(--gray-500); }
+  </style>
+</head>
+<body>
+  <div class="sidebar-layout">
+    <div id="shared-sidebar-root"></div>
+    <script src="/ui/org/sidebar-loader.js" defer></script>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost md:hidden" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+          <span class="page-title">Job Openings</span>
+        </div>
+        <div class="user-menu">
+          <button class="btn btn-primary btn-sm" onclick="openModal('createOpeningModal')"><i class="fas fa-plus"></i> New Opening</button>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <div class="card">
+          <div class="card-header">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="search" id="searchOpenings" placeholder="Search openings..." oninput="renderOpenings()" />
+            </div>
+            <div class="flex gap-2">
+              <select id="statusFilter" class="btn btn-outline btn-sm" onchange="renderOpenings()">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="paused">Paused</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="loadingOpenings"><i class="fas fa-spinner fa-spin" style="font-size:2rem;margin-bottom:12px;display:block;"></i> Loading openings…</div>
+            <div class="table-wrap" id="openingsTableWrap" style="display:none;">
+              <table>
+                <thead><tr><th>Title</th><th>Department</th><th>Location</th><th>Type</th><th>Status</th><th>Applications</th><th>Actions</th></tr></thead>
+                <tbody id="openingsTable"></tbody>
+              </table>
+            </div>
+            <div id="openingsEmpty" class="empty-state hidden"><i class="fas fa-briefcase"></i><h3>No openings yet</h3><p>Create your first job opening to start receiving applications.</p></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Opening Modal -->
+  <div class="modal-overlay" id="createOpeningModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Create New Opening</h2>
+        <button class="modal-close" onclick="closeModal('createOpeningModal')">&times;</button>
+      </div>
+      <form id="createOpeningForm" class="modal-body">
+        <div class="form-group">
+          <label>Job Title <span class="required">*</span></label>
+          <input type="text" name="title" placeholder="e.g. Senior React Developer" required />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label>Department</label>
+            <select name="department"><option>Engineering</option><option>Design</option><option>Marketing</option><option>Sales</option><option>HR</option><option>Other</option></select>
+          </div>
+          <div class="form-group">
+            <label>Employment Type</label>
+            <select name="employment_type"><option value="full-time">Full-time</option><option value="part-time">Part-time</option><option value="contract">Contract</option><option value="internship">Internship</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" name="location" placeholder="e.g. Bangalore / Remote" />
+        </div>
+        <div class="form-group">
+          <label>Description <span class="required">*</span></label>
+          <textarea name="description" placeholder="Describe the role..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Requirements</label>
+          <textarea name="requirements" placeholder="List key requirements..."></textarea>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('createOpeningModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createOpening()"><i class="fas fa-plus"></i> Create Opening</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/ui/shared/app.js"></script>
+  <script>
+    let openings = [];
+    let appCounts = {}; // opening_id -> count
+    let portalBaseUrl = "#";
+
+    const getOpeningStatusBadgeClass = s => ({ active: "success", draft: "gray", paused: "warning", closed: "danger" }[s] || "gray");
+
+    function renderOpenings() {
+      const q = document.getElementById("searchOpenings").value.toLowerCase();
+      const status = document.getElementById("statusFilter").value;
+      const filtered = openings.filter(o => {
+        const matchQ = !q || (o.title + " " + (o.department || "")).toLowerCase().includes(q);
+        const matchS = !status || o.status === status;
+        return matchQ && matchS;
+      });
+      const table = document.getElementById("openingsTable");
+      const empty = document.getElementById("openingsEmpty");
+      document.getElementById("openingsTableWrap").style.display = filtered.length ? "block" : "none";
+      if (!filtered.length) { table.innerHTML = ""; empty.classList.remove("hidden"); return; }
+      empty.classList.add("hidden");
+      table.innerHTML = filtered.map(o => `
+        <tr>
+          <td><strong>${o.title}</strong><div class="text-xs text-muted">${o.slug || ""}</div></td>
+          <td class="text-muted text-sm">${o.department || "—"}</td>
+          <td class="text-muted text-sm">${o.location || "—"}</td>
+          <td><span class="badge gray">${o.employment_type || "—"}</span></td>
+          <td><span class="badge ${getOpeningStatusBadgeClass(o.status)}">${o.status}</span></td>
+          <td>
+            <a href="/ui/org/applications.html?opening=${o.id}" class="text-sm">
+              <i class="fas fa-file-alt" style="margin-right:4px;"></i>${appCounts[o.id] ?? 0}
+            </a>
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-ghost btn-xs" title="Toggle Status" onclick="toggleStatus('${o.id}')"><i class="fas fa-power-off"></i></button>
+              <button class="btn btn-ghost btn-xs" title="Delete" onclick="deleteOpening('${o.id}')"><i class="fas fa-trash" style="color:var(--danger);"></i></button>
+              <a href="${portalBaseUrl}/apply/${o.slug}" target="_blank" class="btn btn-ghost btn-xs" title="Public Link"><i class="fas fa-external-link-alt"></i></a>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add("open"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+    async function createOpening() {
+      const form = document.getElementById("createOpeningForm");
+      const data = Object.fromEntries(new FormData(form));
+      if (!data.title) { showToast("Title is required", "error"); return; }
+      try {
+        const res = await fetchWithAuth("/api/v1/openings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || "Failed");
+        openings.unshift(result);
+        renderOpenings();
+        closeModal("createOpeningModal");
+        form.reset();
+        showToast("Opening created successfully!", "success");
+      } catch (err) {
+        showToast("Failed to create opening: " + err.message, "error");
+      }
+    }
+
+    async function toggleStatus(id) {
+      const o = openings.find(x => x.id === id);
+      if (!o) return;
+      const cycle = { draft: "active", active: "paused", paused: "active", closed: "draft" };
+      const newStatus = cycle[o.status] || "draft";
+      try {
+        // B5 Fix: Use correct endpoint /openings/{id}/status (not /openings/{id})
+        const res = await fetchWithAuth(`/api/v1/openings/${id}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        if (res.ok) {
+          o.status = newStatus;
+          renderOpenings();
+          showToast(`"${o.title}" → ${newStatus}`, "info");
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          showToast(errData.message || "Failed to toggle status", "error");
+        }
+      } catch (err) {
+        showToast("Failed to toggle status: " + err.message, "error");
+      }
+    }
+
+    async function deleteOpening(id) {
+      if (!confirm("Delete this opening? This cannot be undone.")) return;
+      try {
+        await fetchWithAuth(`/api/v1/openings/${id}`, {
+          method: "DELETE",
+        });
+        openings = openings.filter(o => o.id !== id);
+        renderOpenings();
+        showToast("Opening deleted", "warning");
+      } catch {
+        showToast("Failed to delete", "error");
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    async function init() {
+      const user = await requireAuth(["super_admin", "org_admin", "org_member"]);
+      if (!user) return;
+
+      try {
+        // Fetch openings and applications in parallel
+        const [openRes, appsRes, tenantRes] = await Promise.all([
+          fetchWithAuth("/api/v1/openings"),
+          fetchWithAuth("/api/v1/applications/all"),
+          fetchWithAuth("/api/v1/users/tenant/me"),
+        ]);
+
+        document.getElementById("loadingOpenings").style.display = "none";
+
+        if (openRes.status === 401) { window.location.href = "/ui/auth/login.html"; return; }
+
+        if (openRes.ok) {
+          openings = await openRes.json();
+        }
+
+        if (tenantRes.ok) {
+          const tenant = await tenantRes.json();
+          portalBaseUrl = `/portal/o/${tenant.slug}`;
+        }
+
+        // Build application count per opening
+        if (appsRes.ok) {
+          const apps = await appsRes.json();
+          apps.forEach(a => {
+            appCounts[a.opening_id] = (appCounts[a.opening_id] || 0) + 1;
+          });
+        }
+
+        document.getElementById("openingsTableWrap").style.display = "block";
+        renderOpenings();
+      } catch (err) {
+        document.getElementById("loadingOpenings").textContent = "Failed to load openings.";
+        console.error(err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
